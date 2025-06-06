@@ -1048,14 +1048,9 @@ const voiceToggleBtn = document.getElementById("voice-toggle");
 // const API_BASE_URL = isLocal
 //     ? 'http://localhost:3000'
 //     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
-const hostname = window.location.hostname;
-const port = window.location.port;
 
-const isLocal = (hostname === 'localhost' || hostname === '127.0.0.1') && port === '5500';
 
-const API_BASE_URL = isLocal
-    ? 'http://localhost:3000'
-    : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
+const API_BASE_URL = "https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app"
 
 
 
