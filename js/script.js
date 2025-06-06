@@ -1396,6 +1396,7 @@ function tryQuickPatterns(message) {
 // }
 
 function callOpenAIWithFunctions(message) {
+
     appendMessage("🤖 Sto elaborando la tua richiesta...", "bot-message");
 
     const systemPrompt = `Sei un assistente SAP intelligente. Analizza la richiesta dell'utente e determina quale azione eseguire.
@@ -1442,7 +1443,7 @@ Rispondi SEMPRE in questo formato JSON:
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
     // Chiamata corretta per Vercel
-    fetch(`API/openai/chat`, {  // NOTA: /api/ aggiunto
+    fetch(`${urlPage}/openai/chat`, {  // NOTA: /api/ aggiunto
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -1522,6 +1523,8 @@ Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 }
 
 // Funzione di fallback con pattern avanzati
+
+
 function tryAdvancedPatterns(message) {
     const msgLower = message.toLowerCase();
     
