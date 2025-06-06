@@ -1040,10 +1040,11 @@ const voiceToggleBtn = document.getElementById("voice-toggle");
 
 // const urlPage = `http://localhost:3000`
 const urlPage = `https://progettowebsap-git-main-innovationteams-projects.vercel.app`
+console.log('Response status:', response.status);
+console.log('Response headers:', [...response.headers.entries()]);
 
 
 
-// 🔐 Chiave API per OpenAI (⚠️ IMPORTANTE: In produzione usa variabili d'ambiente!)
 
 
 
@@ -1441,8 +1442,8 @@ Rispondi SEMPRE in questo formato JSON:
 
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
-    // Prima prova con il backend
-    fetch(`${urlPage}/openai/chat`, {
+    // Chiamata corretta per Vercel
+    fetch(`${urlPage}/api/openai/chat`, {  // NOTA: /api/ aggiunto
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -1453,21 +1454,35 @@ Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
         })
     })
     .then(async response => {
-        // Controlla se la risposta è OK
+        // Debug della risposta
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+        
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error(`HTTP ${response.status}:`, errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
-        // Controlla se è JSON
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const text = await response.text();
+            console.error('Risposta non JSON:', text);
             throw new Error(`Risposta non JSON: ${text.substring(0, 100)}...`);
         }
         
         return response.json();
     })
     .then(data => {
+        console.log('Dati ricevuti:', data);
+        
+        // Controlla se c'è un errore nella risposta OpenAI
+        if (data.error) {
+            console.error('Errore OpenAI:', data.error);
+            appendMessage(`❌ Errore: ${data.error}`, "bot-message");
+            return;
+        }
+        
         const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta.";
         
         try {
@@ -1494,17 +1509,15 @@ Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
         }
     })
     .catch(err => {
-        console.error("Errore AI:", err);
+        console.error("Errore completo:", err);
         
         // FALLBACK: Prova con pattern locali se il backend non funziona
         appendMessage("🔄 Backend non disponibile, uso pattern locali...", "bot-message");
         
-        // Prova con pattern avanzati locali
         if (tryAdvancedPatterns(message)) {
             return;
         }
         
-        // Fallback finale
         appendMessage("❌ Servizio AI temporaneamente non disponibile. Usa comandi specifici come 'tutti gli ordini' o 'ordine 123456'.", "bot-message");
     });
 }

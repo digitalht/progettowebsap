@@ -42,13 +42,18 @@ export default async function handler(req, res) {
             })
         });
 
-        const data = await response.json();
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error('OpenAI API Error:', errorData);
+            res.status(response.status).json({ error: 'OpenAI API Error', details: errorData });
+            return;
+        }
 
-        // Restituisce la risposta
+        const data = await response.json();
         res.status(200).json(data);
 
     } catch (error) {
-        console.error('Errore OpenAI:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Errore interno:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 }
