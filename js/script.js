@@ -1020,17 +1020,14 @@
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-// Test codice con ai
 // 🎯 CONFIGURAZIONE INIZIALE E VARIABILI GLOBALI
 // ===================================================
 
 // 📦 Recupera gli elementi HTML principali dell'interfaccia utente
-const chatBox = document.getElementById("chat-box");           // 💬 Contenitore dei messaggi di chat
-const userInput = document.getElementById("user-input");       // ✏️ Campo di input per l'utente
-const sendBtn = document.getElementById("send-btn");           // 📤 Pulsante per inviare messaggi
-const sapResults = document.getElementById("sap-results");     // 📊 Area per mostrare i risultati SAP
+const chatBox = document.getElementById("chat-box");
+const userInput = document.getElementById("user-input");
+const sendBtn = document.getElementById("send-btn");
+const sapResults = document.getElementById("sap-results");
 
 // 🎤 Variabili per riconoscimento vocale
 let recognition = null;
@@ -1038,53 +1035,12 @@ let isVoiceModeActive = false;
 let speechSynthesis = window.speechSynthesis;
 const voiceToggleBtn = document.getElementById("voice-toggle");
 
-// // Configurazione URL base per le API
-// const API_BASE_URL = window.location.hostname === 'localhost' 
-//     ? 'http://localhost:3000' 
-//     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
-// ----------
-// const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-
-// const API_BASE_URL = isLocal
-//     ? 'http://localhost:3000'
-//     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
-
-
-const API_BASE_URL = "https://progettowebsap-git-main-innovationteams-projects.vercel.app/"
-
-
-
-
-// // Carica dotenv se usi Node.js
-// require('dotenv').config();
-
-// // Usa la variabile d'ambiente
-// const apiKey = process.env.OPENAI_API_KEY;
-
+// 🌐 Configurazione API URL - CORRETTA
+const API_BASE_URL = "https://progettowebsap-git-main-innovationteams-projects.vercel.app";
 
 // 🗨️ GESTIONE MESSAGGI CHAT
 // ===========================
 
-/**
- * 💬 Aggiunge un nuovo messaggio nella chat (utente o bot)
- * @param {string} text - Il testo del messaggio
- * @param {string} className - La classe CSS per lo stile (user-message o bot-message)
- */
-// function appendMessage(text, className) {
-//     // 🏗️ Crea un nuovo elemento div per il messaggio
-//     const messageDiv = document.createElement("div");
-//     messageDiv.className = className;
-//     messageDiv.textContent = text;
-
-//     // ➕ Aggiunge il messaggio alla chat
-//     chatBox.appendChild(messageDiv);
-
-//     // 📜 Fa scorrere automaticamente la chat verso il basso
-//     chatBox.scrollTop = chatBox.scrollHeight;
-
-//     // 💾 Salva il messaggio nella cronologia locale
-//     saveChatMessage(text, className);
-// }
 function appendMessage(text, className) {
     const messageDiv = document.createElement("div");
     messageDiv.className = className;
@@ -1101,45 +1057,26 @@ function appendMessage(text, className) {
     }
 }
 
-
-/**
- * 💾 Salva un messaggio nella cronologia del browser (localStorage)
- * @param {string} text - Il testo del messaggio
- * @param {string} className - La classe CSS del messaggio
- */
 function saveChatMessage(text, className) {
-    // 📚 Recupera la cronologia esistente o crea un array vuoto
     const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
-
-    // ➕ Aggiunge il nuovo messaggio alla cronologia
     history.push({ text, className });
-
-    // 💾 Salva la cronologia aggiornata
     localStorage.setItem("chatHistory", JSON.stringify(history));
 }
 
 // 🚀 INVIO E GESTIONE MESSAGGI
 // =============================
 
-/**
- * 📤 Gestisce l'invio di un messaggio dell'utente
- */
 function sendMessage() {
-    // ✂️ Rimuove spazi inutili dal messaggio
     const message = userInput.value.trim();
 
-    // 🚫 Se il messaggio è vuoto, non fare nulla
     if (message === "") return;
 
-    // 💬 Mostra il messaggio dell'utente nella chat
     appendMessage(message, "user-message");
-
-    // 🧹 Pulisce il campo di input
     userInput.value = "";
 
     // ⚡ Prima prova con pattern veloci per richieste comuni
     if (tryQuickPatterns(message)) {
-        return; // 🎯 Se trova un pattern veloce, esce dalla funzione
+        return;
     }
 
     // 🤖 Se non trova pattern veloci, usa l'AI per interpretare il messaggio
@@ -1149,16 +1086,9 @@ function sendMessage() {
 // 🏃‍♂️ PATTERN VELOCI PER RICHIESTE COMUNI
 // ==========================================
 
-/**
- * ⚡ Prova pattern veloci per richieste precise e comuni
- * @param {string} message - Il messaggio dell'utente
- * @returns {boolean} - True se ha trovato e gestito un pattern veloce
- */
 function tryQuickPatterns(message) {
-    // 🎯 Array di pattern predefiniti con regex e azioni corrispondenti
     const patterns = [
         {
-            // 📋 Pattern per "tutti gli ordini" 
             regex: /^tutti.*ordini$/i,
             action: () => {
                 appendMessage("🔍 Recupero tutti gli ordini...", "bot-message");
@@ -1166,16 +1096,14 @@ function tryQuickPatterns(message) {
             }
         },
         {
-            // 🔢 Pattern per ordine specifico (es: "ordine 4500000869")
             regex: /^ordine\s+(\d{10})$/i,
             action: (match) => {
-                const orderId = match[1]; // 🎯 Estrae il numero ordine
+                const orderId = match[1];
                 appendMessage(`🔍 Recupero l'ordine ${orderId}...`, "bot-message");
                 getSingleOrder(orderId);
             }
         },
         {
-            // Pattern per rilasciare un ordine specifico
             regex: /^rilascia\s+ordine\s+(\d{10})$/i,
             action: (match) => {
                 const orderId = match[1];
@@ -1185,29 +1113,22 @@ function tryQuickPatterns(message) {
         }
     ];
 
-    // 🔍 Cerca un pattern che corrisponda al messaggio
     for (const pattern of patterns) {
         const match = message.match(pattern.regex);
         if (match) {
-            pattern.action(match); // 🎬 Esegue l'azione corrispondente
-            return true; // ✅ Trovato e gestito
+            pattern.action(match);
+            return true;
         }
     }
-    return false; // ❌ Nessun pattern trovato
+    return false;
 }
 
-// 🤖 INTEGRAZIONE CON OPENAI
-// ===========================
+// 🤖 INTEGRAZIONE CON OPENAI - CORRETTA
+// ======================================
 
-/**
- * 🤖 Chiama OpenAI per interpretare il messaggio e determinare l'azione
- * @param {string} message - Il messaggio dell'utente da interpretare
- */
 function callOpenAIWithFunctions(message) {
-    // 🔄 Mostra messaggio di elaborazione
     appendMessage("🤖 Sto elaborando la tua richiesta...", "bot-message");
 
-    // 📋 Prompt di sistema per istruire l'AI su come comportarsi
     const systemPrompt = `Sei un assistente SAP intelligente. Analizza la richiesta dell'utente e determina quale azione eseguire.
 
 FUNZIONI DISPONIBILI:
@@ -1227,9 +1148,6 @@ ESEMPI DI RICHIESTE CHE DEVI RICONOSCERE:
 - "ordini SAP ITALIA", "ordini fornitore Mario Rossi" → show_orders_by_vendor
 - "fornitori disponibili", "che fornitori ci sono" → list_vendors
 - "ordini 2024", "ordini del 2023" → show_orders_by_year
-- "ordini tra il 01/03/2022 e il 01/06/2022", "ordini dal 15/01/2023 al 20/12/2023" → show_orders_by_date_range
-- "ordini dopo il 2023", "ordini prima del 2022", "ordini dopo il 15/05/2023" → show_orders_by_date_filter  
-- "ordini tra il 2020 e il 2022", "ordini dal 2019 al 2023" → show_orders_by_year_range
 - "rilascia ordine 4500000869", "rilascia l'ordine numero 123" → release_order
 
 Rispondi SEMPRE in questo formato JSON:
@@ -1238,92 +1156,409 @@ Rispondi SEMPRE in questo formato JSON:
   "parameters": {
     "orderId": "numero_ordine_se_necessario",
     "vendorName": "nome_fornitore_se_necessario",
-    "year": "anno_se_necessario",
-    "startDate": "data_inizio_se_necessario_formato_dd/mm/yyyy",
-    "endDate": "data_fine_se_necessario_formato_dd/mm/yyyy",
-    "dateOperator": "before_o_after_se_necessario",
-    "filterDate": "data_filtro_se_necessario_formato_dd/mm/yyyy_o_yyyy",
-    "startYear": "anno_inizio_se_necessario",
-    "endYear": "anno_fine_se_necessario"
+    "year": "anno_se_necessario"
   },
   "response": "messaggio_per_utente"
 }
 
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
-    // 🌐 Chiamata API a OpenAI
-    // fetch("https://api.openai.com/v1/chat/completions", {
-    //     method: "POST",
-    //     headers: {
-    //         "Content-Type": "application/json",
-    //         "Authorization": `Bearer ${apiKey}` // 🔐 Autorizzazione con API key
-    //     },
-    //     body: JSON.stringify({
-    //         model: "gpt-3.5-turbo",              // 🤖 Modello AI da utilizzare
-    //         messages: [
-    //             { role: "system", content: systemPrompt }, // 📋 Istruzioni per l'AI
-    //             { role: "user", content: message }         // 💬 Messaggio dell'utente
-    //         ],
-    //         temperature: 0.1 // 🌡️ Bassa creatività per risposte precise
-    //     })
-    // })
+    // 🌐 Chiamata API corretta
     fetch(`${API_BASE_URL}/openai/chat`, {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        systemPrompt: "Sei un assistente SAP.",
-        message: "Mostrami l'ordine 12345."
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            systemPrompt: systemPrompt,
+            message: message
+        })
     })
-})
-        .then(res => res.json()) // 📥 Converte la risposta in JSON
-        .then(data => {
-            // 📥 Estrae la risposta dell'AI
-            const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta.";
+    .then(async (response) => {
+        console.log("📡 Risposta ricevuta:", response.status, response.statusText);
+        
+        // 🔍 Verifica se la risposta è OK
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("❌ Errore HTTP:", response.status, errorText);
+            throw new Error(`Errore HTTP ${response.status}: ${response.statusText}\n${errorText}`);
+        }
 
-            try {
-                // 🧹 Pulisce la risposta da eventuali formattazioni markdown
-                let jsonContent = reply.trim();
+        // 🔍 Verifica il content-type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const responseText = await response.text();
+            console.error("❌ Risposta non JSON:", responseText);
+            throw new Error(`Risposta non JSON ricevuta: ${responseText.substring(0, 200)}...`);
+        }
 
-                // 🔧 Rimuove i backticks del markdown se presenti
-                if (jsonContent.startsWith('```json')) {
-                    jsonContent = jsonContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
-                } else if (jsonContent.startsWith('```')) {
-                    jsonContent = jsonContent.replace(/```\s*/, '').replace(/```\s*$/, '');
-                }
+        return response.json();
+    })
+    .then(data => {
+        console.log("📥 Dati AI ricevuti:", data);
 
+        // 📥 Estrae la risposta dell'AI
+        const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta dall'AI.";
 
-                // 📖 Prova a parsare come JSON
-                const aiResponse = JSON.parse(jsonContent);
+        try {
+            // 🧹 Pulisce la risposta da eventuali formattazioni markdown
+            let jsonContent = reply.trim();
 
-                // ✅ Verifica che sia un oggetto valido con action
-                if (aiResponse && typeof aiResponse === 'object' && aiResponse.action) {
-                    executeAIAction(aiResponse); // 🎬 Esegue l'azione determinata dall'AI
-                } else {
-                    // 💬 Se non ha la struttura corretta, mostra come messaggio normale
-                    appendMessage(reply, "bot-message");
-                }
-            } catch (e) {
-                // 🐛 Gestisce errori di parsing JSON
-                console.log("Errore parsing JSON:", e);
-                console.log("Contenuto ricevuto:", reply);
+            if (jsonContent.startsWith('```json')) {
+                jsonContent = jsonContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
+            } else if (jsonContent.startsWith('```')) {
+                jsonContent = jsonContent.replace(/```\s*/, '').replace(/```\s*$/, '');
+            }
 
-                // 🔄 Fallback: prova a estrarre informazioni dal testo
-                if (parseAndExecuteFromText(reply)) {
-                    return;
-                }
+            // 📖 Prova a parsare come JSON
+            const aiResponse = JSON.parse(jsonContent);
 
-                // 💬 Se tutto fallisce, mostra come messaggio normale
+            // ✅ Verifica che sia un oggetto valido con action
+            if (aiResponse && typeof aiResponse === 'object' && aiResponse.action) {
+                executeAIAction(aiResponse);
+            } else {
                 appendMessage(reply, "bot-message");
             }
-        })
-        .catch(err => {
-            // ❌ Gestisce errori della chiamata API
-            console.error("Errore AI:", err);
-            appendMessage("❌ Errore con l'AI. Riprova.", "bot-message");
-        });
+        } catch (e) {
+            console.log("🐛 Errore parsing JSON:", e);
+            console.log("📄 Contenuto ricevuto:", reply);
+
+            // 🔄 Fallback: prova a estrarre informazioni dal testo
+            if (parseAndExecuteFromText && parseAndExecuteFromText(reply)) {
+                return;
+            }
+
+            // 💬 Se tutto fallisce, mostra come messaggio normale
+            appendMessage(reply, "bot-message");
+        }
+    })
+    .catch(err => {
+        console.error("❌ Errore completo:", err);
+        
+        // 🔍 Analizza il tipo di errore
+        let errorMessage = "❌ Si è verificato un errore. ";
+        
+        if (err.message.includes('404')) {
+            errorMessage += "L'endpoint dell'API non è stato trovato. Verifica che il server sia attivo.";
+        } else if (err.message.includes('Failed to fetch')) {
+            errorMessage += "Impossibile contattare il server. Verifica la connessione internet.";
+        } else if (err.message.includes('Risposta non JSON')) {
+            errorMessage += "Il server ha restituito una risposta non valida.";
+        } else {
+            errorMessage += `Dettagli: ${err.message}`;
+        }
+        
+        appendMessage(errorMessage, "bot-message");
+        
+        // 🔧 Suggerimento per il debug
+        if (window.location.hostname === 'localhost') {
+            appendMessage("🔧 Debug: Verifica che il server Node.js sia avviato su localhost:3000", "bot-message");
+        }
+    });
 }
+
+// // Test codice con ai
+// // 🎯 CONFIGURAZIONE INIZIALE E VARIABILI GLOBALI
+// // ===================================================
+
+// // 📦 Recupera gli elementi HTML principali dell'interfaccia utente
+// const chatBox = document.getElementById("chat-box");           // 💬 Contenitore dei messaggi di chat
+// const userInput = document.getElementById("user-input");       // ✏️ Campo di input per l'utente
+// const sendBtn = document.getElementById("send-btn");           // 📤 Pulsante per inviare messaggi
+// const sapResults = document.getElementById("sap-results");     // 📊 Area per mostrare i risultati SAP
+
+// // 🎤 Variabili per riconoscimento vocale
+// let recognition = null;
+// let isVoiceModeActive = false;
+// let speechSynthesis = window.speechSynthesis;
+// const voiceToggleBtn = document.getElementById("voice-toggle");
+
+// // // Configurazione URL base per le API
+// // const API_BASE_URL = window.location.hostname === 'localhost' 
+// //     ? 'http://localhost:3000' 
+// //     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
+// // ----------
+// // const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+// // const API_BASE_URL = isLocal
+// //     ? 'http://localhost:3000'
+// //     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
+
+
+// const API_BASE_URL = "https://progettowebsap-git-main-innovationteams-projects.vercel.app/"
+
+
+
+
+// // // Carica dotenv se usi Node.js
+// // require('dotenv').config();
+
+// // // Usa la variabile d'ambiente
+// // const apiKey = process.env.OPENAI_API_KEY;
+
+
+// // 🗨️ GESTIONE MESSAGGI CHAT
+// // ===========================
+
+// /**
+//  * 💬 Aggiunge un nuovo messaggio nella chat (utente o bot)
+//  * @param {string} text - Il testo del messaggio
+//  * @param {string} className - La classe CSS per lo stile (user-message o bot-message)
+//  */
+// // function appendMessage(text, className) {
+// //     // 🏗️ Crea un nuovo elemento div per il messaggio
+// //     const messageDiv = document.createElement("div");
+// //     messageDiv.className = className;
+// //     messageDiv.textContent = text;
+
+// //     // ➕ Aggiunge il messaggio alla chat
+// //     chatBox.appendChild(messageDiv);
+
+// //     // 📜 Fa scorrere automaticamente la chat verso il basso
+// //     chatBox.scrollTop = chatBox.scrollHeight;
+
+// //     // 💾 Salva il messaggio nella cronologia locale
+// //     saveChatMessage(text, className);
+// // }
+// function appendMessage(text, className) {
+//     const messageDiv = document.createElement("div");
+//     messageDiv.className = className;
+//     messageDiv.textContent = text;
+
+//     chatBox.appendChild(messageDiv);
+//     chatBox.scrollTop = chatBox.scrollHeight;
+
+//     saveChatMessage(text, className);
+
+//     // 🔊 Se è un messaggio del bot e modalità vocale attiva, fallo parlare
+//     if (className === "bot-message" && isVoiceModeActive) {
+//         speakText(text);
+//     }
+// }
+
+
+// /**
+//  * 💾 Salva un messaggio nella cronologia del browser (localStorage)
+//  * @param {string} text - Il testo del messaggio
+//  * @param {string} className - La classe CSS del messaggio
+//  */
+// function saveChatMessage(text, className) {
+//     // 📚 Recupera la cronologia esistente o crea un array vuoto
+//     const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
+
+//     // ➕ Aggiunge il nuovo messaggio alla cronologia
+//     history.push({ text, className });
+
+//     // 💾 Salva la cronologia aggiornata
+//     localStorage.setItem("chatHistory", JSON.stringify(history));
+// }
+
+// // 🚀 INVIO E GESTIONE MESSAGGI
+// // =============================
+
+// /**
+//  * 📤 Gestisce l'invio di un messaggio dell'utente
+//  */
+// function sendMessage() {
+//     // ✂️ Rimuove spazi inutili dal messaggio
+//     const message = userInput.value.trim();
+
+//     // 🚫 Se il messaggio è vuoto, non fare nulla
+//     if (message === "") return;
+
+//     // 💬 Mostra il messaggio dell'utente nella chat
+//     appendMessage(message, "user-message");
+
+//     // 🧹 Pulisce il campo di input
+//     userInput.value = "";
+
+//     // ⚡ Prima prova con pattern veloci per richieste comuni
+//     if (tryQuickPatterns(message)) {
+//         return; // 🎯 Se trova un pattern veloce, esce dalla funzione
+//     }
+
+//     // 🤖 Se non trova pattern veloci, usa l'AI per interpretare il messaggio
+//     callOpenAIWithFunctions(message);
+// }
+
+// // 🏃‍♂️ PATTERN VELOCI PER RICHIESTE COMUNI
+// // ==========================================
+
+// /**
+//  * ⚡ Prova pattern veloci per richieste precise e comuni
+//  * @param {string} message - Il messaggio dell'utente
+//  * @returns {boolean} - True se ha trovato e gestito un pattern veloce
+//  */
+// function tryQuickPatterns(message) {
+//     // 🎯 Array di pattern predefiniti con regex e azioni corrispondenti
+//     const patterns = [
+//         {
+//             // 📋 Pattern per "tutti gli ordini" 
+//             regex: /^tutti.*ordini$/i,
+//             action: () => {
+//                 appendMessage("🔍 Recupero tutti gli ordini...", "bot-message");
+//                 getSAPEntityData("PurchaseOrderSet");
+//             }
+//         },
+//         {
+//             // 🔢 Pattern per ordine specifico (es: "ordine 4500000869")
+//             regex: /^ordine\s+(\d{10})$/i,
+//             action: (match) => {
+//                 const orderId = match[1]; // 🎯 Estrae il numero ordine
+//                 appendMessage(`🔍 Recupero l'ordine ${orderId}...`, "bot-message");
+//                 getSingleOrder(orderId);
+//             }
+//         },
+//         {
+//             // Pattern per rilasciare un ordine specifico
+//             regex: /^rilascia\s+ordine\s+(\d{10})$/i,
+//             action: (match) => {
+//                 const orderId = match[1];
+//                 appendMessage(`🔐 Rilascio ordine ${orderId}...`, "bot-message");
+//                 releaseOrder(orderId);
+//             }
+//         }
+//     ];
+
+//     // 🔍 Cerca un pattern che corrisponda al messaggio
+//     for (const pattern of patterns) {
+//         const match = message.match(pattern.regex);
+//         if (match) {
+//             pattern.action(match); // 🎬 Esegue l'azione corrispondente
+//             return true; // ✅ Trovato e gestito
+//         }
+//     }
+//     return false; // ❌ Nessun pattern trovato
+// }
+
+// // 🤖 INTEGRAZIONE CON OPENAI
+// // ===========================
+
+// /**
+//  * 🤖 Chiama OpenAI per interpretare il messaggio e determinare l'azione
+//  * @param {string} message - Il messaggio dell'utente da interpretare
+//  */
+// function callOpenAIWithFunctions(message) {
+//     // 🔄 Mostra messaggio di elaborazione
+//     appendMessage("🤖 Sto elaborando la tua richiesta...", "bot-message");
+
+//     // 📋 Prompt di sistema per istruire l'AI su come comportarsi
+//     const systemPrompt = `Sei un assistente SAP intelligente. Analizza la richiesta dell'utente e determina quale azione eseguire.
+
+// FUNZIONI DISPONIBILI:
+// 1. "show_all_orders" - mostra tutti gli ordini
+// 2. "show_specific_order" - mostra un ordine specifico (serve il numero ordine)
+// 3. "show_orders_by_vendor" - mostra ordini di un fornitore specifico
+// 4. "show_orders_by_date_range" - mostra ordini tra due date specifiche
+// 5. "show_orders_by_date_filter" - mostra ordini prima/dopo una data
+// 6. "show_orders_by_year_range" - mostra ordini tra due anni
+// 7. "list_vendors" - elenca tutti i fornitori
+// 8. "show_orders_by_year" - mostra ordini di un anno specifico
+// 9. "release_order" - rilascia un ordine specifico (serve il numero ordine)
+
+// ESEMPI DI RICHIESTE CHE DEVI RICONOSCERE:
+// - "tutti gli ordini", "mostra ordini", "visualizza tutti gli ordini" → show_all_orders
+// - "ordine 4500000869", "mostra ordine numero 123", "dettagli ordine" → show_specific_order
+// - "ordini SAP ITALIA", "ordini fornitore Mario Rossi" → show_orders_by_vendor
+// - "fornitori disponibili", "che fornitori ci sono" → list_vendors
+// - "ordini 2024", "ordini del 2023" → show_orders_by_year
+// - "ordini tra il 01/03/2022 e il 01/06/2022", "ordini dal 15/01/2023 al 20/12/2023" → show_orders_by_date_range
+// - "ordini dopo il 2023", "ordini prima del 2022", "ordini dopo il 15/05/2023" → show_orders_by_date_filter  
+// - "ordini tra il 2020 e il 2022", "ordini dal 2019 al 2023" → show_orders_by_year_range
+// - "rilascia ordine 4500000869", "rilascia l'ordine numero 123" → release_order
+
+// Rispondi SEMPRE in questo formato JSON:
+// {
+//   "action": "nome_funzione",
+//   "parameters": {
+//     "orderId": "numero_ordine_se_necessario",
+//     "vendorName": "nome_fornitore_se_necessario",
+//     "year": "anno_se_necessario",
+//     "startDate": "data_inizio_se_necessario_formato_dd/mm/yyyy",
+//     "endDate": "data_fine_se_necessario_formato_dd/mm/yyyy",
+//     "dateOperator": "before_o_after_se_necessario",
+//     "filterDate": "data_filtro_se_necessario_formato_dd/mm/yyyy_o_yyyy",
+//     "startYear": "anno_inizio_se_necessario",
+//     "endYear": "anno_fine_se_necessario"
+//   },
+//   "response": "messaggio_per_utente"
+// }
+
+// Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
+
+//     // 🌐 Chiamata API a OpenAI
+//     // fetch("https://api.openai.com/v1/chat/completions", {
+//     //     method: "POST",
+//     //     headers: {
+//     //         "Content-Type": "application/json",
+//     //         "Authorization": `Bearer ${apiKey}` // 🔐 Autorizzazione con API key
+//     //     },
+//     //     body: JSON.stringify({
+//     //         model: "gpt-3.5-turbo",              // 🤖 Modello AI da utilizzare
+//     //         messages: [
+//     //             { role: "system", content: systemPrompt }, // 📋 Istruzioni per l'AI
+//     //             { role: "user", content: message }         // 💬 Messaggio dell'utente
+//     //         ],
+//     //         temperature: 0.1 // 🌡️ Bassa creatività per risposte precise
+//     //     })
+//     // })
+//     fetch(`${API_BASE_URL}/openai/chat`, {
+//     method: "POST",
+//     headers: {
+//         "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify({
+//         systemPrompt: "Sei un assistente SAP.",
+//         message: "Mostrami l'ordine 12345."
+//     })
+// })
+//         .then(res => res.json()) // 📥 Converte la risposta in JSON
+//         .then(data => {
+//             // 📥 Estrae la risposta dell'AI
+//             const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta.";
+
+//             try {
+//                 // 🧹 Pulisce la risposta da eventuali formattazioni markdown
+//                 let jsonContent = reply.trim();
+
+//                 // 🔧 Rimuove i backticks del markdown se presenti
+//                 if (jsonContent.startsWith('```json')) {
+//                     jsonContent = jsonContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
+//                 } else if (jsonContent.startsWith('```')) {
+//                     jsonContent = jsonContent.replace(/```\s*/, '').replace(/```\s*$/, '');
+//                 }
+
+
+//                 // 📖 Prova a parsare come JSON
+//                 const aiResponse = JSON.parse(jsonContent);
+
+//                 // ✅ Verifica che sia un oggetto valido con action
+//                 if (aiResponse && typeof aiResponse === 'object' && aiResponse.action) {
+//                     executeAIAction(aiResponse); // 🎬 Esegue l'azione determinata dall'AI
+//                 } else {
+//                     // 💬 Se non ha la struttura corretta, mostra come messaggio normale
+//                     appendMessage(reply, "bot-message");
+//                 }
+//             } catch (e) {
+//                 // 🐛 Gestisce errori di parsing JSON
+//                 console.log("Errore parsing JSON:", e);
+//                 console.log("Contenuto ricevuto:", reply);
+
+//                 // 🔄 Fallback: prova a estrarre informazioni dal testo
+//                 if (parseAndExecuteFromText(reply)) {
+//                     return;
+//                 }
+
+//                 // 💬 Se tutto fallisce, mostra come messaggio normale
+//                 appendMessage(reply, "bot-message");
+//             }
+//         })
+//         .catch(err => {
+//             // ❌ Gestisce errori della chiamata API
+//             console.error("Errore AI:", err);
+//             appendMessage("❌ Errore con l'AI. Riprova.", "bot-message");
+//         });
+// }
 
 // 🔧 PARSING FALLBACK PER TESTI NON-JSON
 // ========================================
