@@ -1038,18 +1038,33 @@ let isVoiceModeActive = false;
 let speechSynthesis = window.speechSynthesis;
 const voiceToggleBtn = document.getElementById("voice-toggle");
 
-// Configurazione URL base per le API
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
+// // Configurazione URL base per le API
+// const API_BASE_URL = window.location.hostname === 'localhost' 
+//     ? 'http://localhost:3000' 
+//     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
+// ----------
+// const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+// const API_BASE_URL = isLocal
+//     ? 'http://localhost:3000'
+//     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
+const hostname = window.location.hostname;
+const port = window.location.port;
+
+const isLocal = (hostname === 'localhost' || hostname === '127.0.0.1') && port === '5500';
+
+const API_BASE_URL = isLocal
+    ? 'http://localhost:3000'
     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
 
 
 
-// Carica dotenv se usi Node.js
-require('dotenv').config();
 
-// Usa la variabile d'ambiente
-const apiKey = process.env.OPENAI_API_KEY;
+// // Carica dotenv se usi Node.js
+// require('dotenv').config();
+
+// // Usa la variabile d'ambiente
+// const apiKey = process.env.OPENAI_API_KEY;
 
 
 // 🗨️ GESTIONE MESSAGGI CHAT
@@ -1242,21 +1257,31 @@ Rispondi SEMPRE in questo formato JSON:
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
     // 🌐 Chiamata API a OpenAI
-    fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}` // 🔐 Autorizzazione con API key
-        },
-        body: JSON.stringify({
-            model: "gpt-3.5-turbo",              // 🤖 Modello AI da utilizzare
-            messages: [
-                { role: "system", content: systemPrompt }, // 📋 Istruzioni per l'AI
-                { role: "user", content: message }         // 💬 Messaggio dell'utente
-            ],
-            temperature: 0.1 // 🌡️ Bassa creatività per risposte precise
-        })
+    // fetch("https://api.openai.com/v1/chat/completions", {
+    //     method: "POST",
+    //     headers: {
+    //         "Content-Type": "application/json",
+    //         "Authorization": `Bearer ${apiKey}` // 🔐 Autorizzazione con API key
+    //     },
+    //     body: JSON.stringify({
+    //         model: "gpt-3.5-turbo",              // 🤖 Modello AI da utilizzare
+    //         messages: [
+    //             { role: "system", content: systemPrompt }, // 📋 Istruzioni per l'AI
+    //             { role: "user", content: message }         // 💬 Messaggio dell'utente
+    //         ],
+    //         temperature: 0.1 // 🌡️ Bassa creatività per risposte precise
+    //     })
+    // })
+    fetch(`${API_BASE_URL}/openai/chat`, {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        systemPrompt: "Sei un assistente SAP.",
+        message: "Mostrami l'ordine 12345."
     })
+})
         .then(res => res.json()) // 📥 Converte la risposta in JSON
         .then(data => {
             // 📥 Estrae la risposta dell'AI
