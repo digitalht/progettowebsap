@@ -1304,6 +1304,97 @@ function tryQuickPatterns(message) {
 
 // 🔧 PARSING FALLBACK PER TESTI NON-JSON
 // ========================================
+// function callOpenAIWithFunctions(message) {
+//     appendMessage("🤖 Sto elaborando la tua richiesta...", "bot-message");
+
+//     const systemPrompt = `Sei un assistente SAP intelligente. Analizza la richiesta dell'utente e determina quale azione eseguire.
+
+// FUNZIONI DISPONIBILI:
+// 1. "show_all_orders" - mostra tutti gli ordini
+// 2. "show_specific_order" - mostra un ordine specifico (serve il numero ordine)
+// 3. "show_orders_by_vendor" - mostra ordini di un fornitore specifico
+// 4. "show_orders_by_date_range" - mostra ordini tra due date specifiche
+// 5. "show_orders_by_date_filter" - mostra ordini prima/dopo una data
+// 6. "show_orders_by_year_range" - mostra ordini tra due anni
+// 7. "list_vendors" - elenca tutti i fornitori
+// 8. "show_orders_by_year" - mostra ordini di un anno specifico
+// 9. "release_order" - rilascia un ordine specifico (serve il numero ordine)
+
+// ESEMPI DI RICHIESTE CHE DEVI RICONOSCERE:
+// - "tutti gli ordini", "mostra ordini", "visualizza tutti gli ordini" → show_all_orders
+// - "ordine 4500000869", "mostra ordine numero 123", "dettagli ordine" → show_specific_order
+// - "ordini SAP ITALIA", "ordini fornitore Mario Rossi" → show_orders_by_vendor
+// - "fornitori disponibili", "che fornitori ci sono" → list_vendors
+// - "ordini 2024", "ordini del 2023" → show_orders_by_year
+// - "ordini tra il 01/03/2022 e il 01/06/2022", "ordini dal 15/01/2023 al 20/12/2023" → show_orders_by_date_range
+// - "ordini dopo il 2023", "ordini prima del 2022", "ordini dopo il 15/05/2023" → show_orders_by_date_filter  
+// - "ordini tra il 2020 e il 2022", "ordini dal 2019 al 2023" → show_orders_by_year_range
+// - "rilascia ordine 4500000869", "rilascia l'ordine numero 123" → release_order
+
+// Rispondi SEMPRE in questo formato JSON:
+// {
+//   "action": "nome_funzione",
+//   "parameters": {
+//     "orderId": "numero_ordine_se_necessario",
+//     "vendorName": "nome_fornitore_se_necessario",
+//     "year": "anno_se_necessario",
+//     "startDate": "data_inizio_se_necessario_formato_dd/mm/yyyy",
+//     "endDate": "data_fine_se_necessario_formato_dd/mm/yyyy",
+//     "dateOperator": "before_o_after_se_necessario",
+//     "filterDate": "data_filtro_se_necessario_formato_dd/mm/yyyy_o_yyyy",
+//     "startYear": "anno_inizio_se_necessario",
+//     "endYear": "anno_fine_se_necessario"
+//   },
+//   "response": "messaggio_per_utente"
+// }
+
+// Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
+
+//     // Cambia la chiamata per usare il tuo backend invece di OpenAI direttamente
+//     fetch(`${urlPage}/openai/chat`, {
+//         method: "POST",
+//         headers: {
+//             "Content-Type": "application/json"
+//         },
+//         body: JSON.stringify({
+//             message: message,
+//             systemPrompt: systemPrompt
+//         })
+//     })
+//     .then(res => res.json())
+//     .then(data => {
+//         const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta.";
+        
+//         // Il resto del codice rimane uguale...
+//         try {
+//             let jsonContent = reply.trim();
+//             if (jsonContent.startsWith('```json')) {
+//                 jsonContent = jsonContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
+//             } else if (jsonContent.startsWith('```')) {
+//                 jsonContent = jsonContent.replace(/```\s*/, '').replace(/```\s*$/, '');
+//             }
+
+//             const aiResponse = JSON.parse(jsonContent);
+//             if (aiResponse && typeof aiResponse === 'object' && aiResponse.action) {
+//                 executeAIAction(aiResponse);
+//             } else {
+//                 appendMessage(reply, "bot-message");
+//             }
+//         } catch (e) {
+//             console.log("Errore parsing JSON:", e);
+//             console.log("Contenuto ricevuto:", reply);
+//             if (parseAndExecuteFromText(reply)) {
+//                 return;
+//             }
+//             appendMessage(reply, "bot-message");
+//         }
+//     })
+//     .catch(err => {
+//         console.error("Errore AI:", err);
+//         appendMessage("❌ Errore con l'AI. Riprova.", "bot-message");
+//     });
+// }
+
 function callOpenAIWithFunctions(message) {
     appendMessage("🤖 Sto elaborando la tua richiesta...", "bot-message");
 
@@ -1350,7 +1441,7 @@ Rispondi SEMPRE in questo formato JSON:
 
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
-    // Cambia la chiamata per usare il tuo backend invece di OpenAI direttamente
+    // Prima prova con il backend
     fetch(`${urlPage}/openai/chat`, {
         method: "POST",
         headers: {
@@ -1361,11 +1452,24 @@ Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
             systemPrompt: systemPrompt
         })
     })
-    .then(res => res.json())
+    .then(async response => {
+        // Controlla se la risposta è OK
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        // Controlla se è JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Risposta non JSON: ${text.substring(0, 100)}...`);
+        }
+        
+        return response.json();
+    })
     .then(data => {
         const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta.";
         
-        // Il resto del codice rimane uguale...
         try {
             let jsonContent = reply.trim();
             if (jsonContent.startsWith('```json')) {
@@ -1391,8 +1495,62 @@ Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
     })
     .catch(err => {
         console.error("Errore AI:", err);
-        appendMessage("❌ Errore con l'AI. Riprova.", "bot-message");
+        
+        // FALLBACK: Prova con pattern locali se il backend non funziona
+        appendMessage("🔄 Backend non disponibile, uso pattern locali...", "bot-message");
+        
+        // Prova con pattern avanzati locali
+        if (tryAdvancedPatterns(message)) {
+            return;
+        }
+        
+        // Fallback finale
+        appendMessage("❌ Servizio AI temporaneamente non disponibile. Usa comandi specifici come 'tutti gli ordini' o 'ordine 123456'.", "bot-message");
     });
+}
+
+// Funzione di fallback con pattern avanzati
+function tryAdvancedPatterns(message) {
+    const msgLower = message.toLowerCase();
+    
+    // Pattern più complessi per quando l'AI non è disponibile
+    const advancedPatterns = [
+        {
+            regex: /ordini?\s+del?\s+(\d{4})/i,
+            action: (match) => {
+                const year = match[1];
+                appendMessage(`🔍 Cerco ordini del ${year}...`, "bot-message");
+                const start = new Date(`${year}-01-01`);
+                const end = new Date(`${year}-12-31`);
+                getSAPEntityData("PurchaseOrderSet", null, { start, end });
+            }
+        },
+        {
+            regex: /ordini?\s+(?:del\s+)?fornitore?\s+(.+)/i,
+            action: (match) => {
+                const vendor = match[1].trim();
+                appendMessage(`🔍 Cerco ordini del fornitore "${vendor}"...`, "bot-message");
+                getSAPEntityData("PurchaseOrderSet", null, null, vendor);
+            }
+        },
+        {
+            regex: /(?:lista|elenco)\s+(?:dei\s+)?fornitori/i,
+            action: () => {
+                appendMessage("🔍 Recupero elenco fornitori...", "bot-message");
+                listVendors();
+            }
+        }
+    ];
+    
+    for (const pattern of advancedPatterns) {
+        const match = message.match(pattern.regex);
+        if (match) {
+            pattern.action(match);
+            return true;
+        }
+    }
+    
+    return false;
 }
 /**
  * 🔧 Fallback per estrarre informazioni da testo quando il JSON non funziona
