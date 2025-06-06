@@ -1038,6 +1038,8 @@ let isVoiceModeActive = false;
 let speechSynthesis = window.speechSynthesis;
 const voiceToggleBtn = document.getElementById("voice-toggle");
 
+const urlPage = `https://progettowebsap-git-main-innovationteams-projects.vercel.app`
+
 
 
 // 🔐 Chiave API per OpenAI (⚠️ IMPORTANTE: In produzione usa variabili d'ambiente!)
@@ -1348,7 +1350,7 @@ Rispondi SEMPRE in questo formato JSON:
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
     // Cambia la chiamata per usare il tuo backend invece di OpenAI direttamente
-    fetch("https://progettowebsap-git-main-innovationteams-projects.vercel.app/openai/chat", {
+    fetch(`${urlPage}/openai/chat`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -1649,7 +1651,7 @@ function getSingleOrder(orderId) {
     sapResults.innerHTML = "🔄 Caricamento ordine...";
 
     // 🌐 URL per la chiamata SAP
-    const url = `https://progettowebsap-git-main-innovationteams-projects.vercel.app/sap/PurchaseOrderSet`;
+    const url = `${urlPage}/sap/PurchaseOrderSet`;
 
     // 📡 Chiamata HTTP a SAP
     fetch(url, {
@@ -1691,7 +1693,7 @@ function getSingleOrder(orderId) {
 function getSAPEntityData(entity, filterOrder = null, dateFilter = null, vendorName = null) {
     // 🔄 Mostra messaggio di caricamento
     sapResults.innerHTML = "🔄 Caricamento dati...";
-    const url = `https://progettowebsap-git-main-innovationteams-projects.vercel.app/sap/${entity}`;
+    const url = `${urlPage}/sap/${entity}`;
 
     // 📡 Chiamata HTTP a SAP
     fetch(url, {
@@ -1859,7 +1861,7 @@ function renderSAPData(entity, records) {
  */
 function listVendors() {
     // 📡 Chiamata per recuperare gli ordini (da cui estrarre i fornitori)
-    fetch(`https://progettowebsap-git-main-innovationteams-projects.vercel.app/sap/PurchaseOrderSet`, {
+    fetch(`${urlPage}/sap/PurchaseOrderSet`, {
         method: "GET",
         headers: {
             "Authorization": "Basic " + btoa("rcarini:Velcome24"), // 🔐 Autenticazione
@@ -1943,7 +1945,7 @@ function renderOrderDetails(order) {
     localStorage.setItem("currentOrderId", orderId);
 
     // 📋 Carica le righe dell'ordine in modo asincrono
-    fetch(`https://progettowebsap-git-main-innovationteams-projects.vercel.app/sap/order-items/${orderId}`)
+    fetch(`${urlPage}/sap/order-items/${orderId}`)
         .then(res => res.json()) // 📥 Converte in JSON
         .then(data => {
             if (data.items && data.items.length > 0) {
@@ -1991,7 +1993,7 @@ function releaseOrder(orderId) {
     appendMessage(`🔄 Rilascio in corso per ordine ${orderId}...`, "bot-message");
 
     // 📡 Chiamata POST per rilasciare l'ordine
-    fetch(`https://progettowebsap-git-main-innovationteams-projects.vercel.app/sap/release/${orderId}`, {
+    fetch(`${urlPage}/sap/release/${orderId}`, {
         method: "POST",
         headers: {
             "Authorization": "Basic " + btoa("rcarini:Velcome24"), // 🔐 Autenticazione
