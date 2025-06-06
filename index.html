@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HT Assistant</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <body>
+        <div class="sap-order-header">
+            <h2>SAP Order</h2>
+        </div>
+        <div class="chat-wrapper">
+            <div class="chat-container">
+                <div class="chat-header">
+                    HT Assistant
+                    <button id="toggle-chat" class="chat-toggle-btn">−</button>
+                </div>
+                <div class="chat-box" id="chat-box"></div>
+                <div class="chat-input">
+                    <button id="voice-toggle" style="
+                       position: absolute;
+                       top: 12px;
+                       right: 29px;
+                       background-color: #007BFF;
+                       color: white;
+                       border: none;
+                       padding: 8px 14px;
+                       border-radius: 6px;
+                       cursor: pointer;
+                       font-weight: 500;
+                       z-index: 1000;">
+                        🎤 Modalità vocale
+                    </button>
+                    <input type="text" id="user-input" placeholder="Scrivi un messaggio...">
+                    <button id="send-btn">Send</button>
+                </div>
+            </div>
+            <!-- Risultati dinamici da SAP -->
+            <div id="sap-results" class="dynamic-result"></div>
+
+
+            <!-- Area per i risultati dinamici -->
+            <div id="dynamic-result" class="dynamic-result"></div>
+        </div>
+
+
+
+        <script src="js/script.js"></script>
+    </body>
+</body>
+
+</html>
