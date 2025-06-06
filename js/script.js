@@ -1442,7 +1442,7 @@ Rispondi SEMPRE in questo formato JSON:
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
     // Chiamata corretta per Vercel
-    fetch(`api/openai/chat`, {  // NOTA: /api/ aggiunto
+    fetch(`API/openai/chat`, {  // NOTA: /api/ aggiunto
         method: "POST",
         headers: {
             "Content-Type": "application/json"
