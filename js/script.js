@@ -1050,7 +1050,7 @@ const voiceToggleBtn = document.getElementById("voice-toggle");
 //     : 'https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app';
 
 
-const API_BASE_URL = "https://progettowebsap-nmt1alic2-innovationteams-projects.vercel.app"
+const API_BASE_URL = "https://progettowebsap-git-main-innovationteams-projects.vercel.app/"
 
 
 
