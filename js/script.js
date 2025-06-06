@@ -1040,8 +1040,7 @@ const voiceToggleBtn = document.getElementById("voice-toggle");
 
 // const urlPage = `http://localhost:3000`
 const urlPage = `https://progettowebsap-git-main-innovationteams-projects.vercel.app`
-console.log('Response status:', response.status);
-console.log('Response headers:', [...response.headers.entries()]);
+
 
 
 
@@ -1443,7 +1442,7 @@ Rispondi SEMPRE in questo formato JSON:
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
     // Chiamata corretta per Vercel
-    fetch(`${urlPage}/api/openai/chat`, {  // NOTA: /api/ aggiunto
+    fetch(`api/openai/chat`, {  // NOTA: /api/ aggiunto
         method: "POST",
         headers: {
             "Content-Type": "application/json"
