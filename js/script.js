@@ -1424,7 +1424,8 @@ Rispondi SEMPRE in questo formato JSON:
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
     // Chiamata corretta per Vercel
-    fetch(`${urlPage}/openai/chat`, {  // NOTA: /api/ aggiunto
+    // fetch(`${urlPage}/openai/chat`, { 
+    fetch(`https://40ea3209-885a-4a8d-98ec-bc5e8f53e063-00-5529wmky4j3q.janeway.replit.dev/openai/chat`, {  
         method: "POST",
         headers: {
             "Content-Type": "application/json"
