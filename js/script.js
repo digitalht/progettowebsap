@@ -1038,13 +1038,9 @@ let isVoiceModeActive = false;
 let speechSynthesis = window.speechSynthesis;
 const voiceToggleBtn = document.getElementById("voice-toggle");
 
-const urlPage = `http://localhost:3000`
+// const urlPage = `http://localhost:3000`
 // const urlPage = `https://progettowebsap-git-main-innovationteams-projects.vercel.app`
-
-
-
-
-
+const urlPage = `https://40ea3209-885a-4a8d-98ec-bc5e8f53e063-00-5529wmky4j3q.janeway.replit.dev`
 
 
 
