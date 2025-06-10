@@ -1038,14 +1038,8 @@ let isVoiceModeActive = false;
 let speechSynthesis = window.speechSynthesis;
 const voiceToggleBtn = document.getElementById("voice-toggle");
 
-// const urlPage = `http://localhost:3000`
-const urlPage = `https://progettowebsap-git-main-innovationteams-projects.vercel.app`
-
-
-
-
-
-
+const urlPage = `http://localhost:3000`
+// const urlPage = `https://progettowebsap-git-main-innovationteams-projects.vercel.app`
 
 
 // 🗨️ GESTIONE MESSAGGI CHAT
@@ -1056,21 +1050,7 @@ const urlPage = `https://progettowebsap-git-main-innovationteams-projects.vercel
  * @param {string} text - Il testo del messaggio
  * @param {string} className - La classe CSS per lo stile (user-message o bot-message)
  */
-// function appendMessage(text, className) {
-//     // 🏗️ Crea un nuovo elemento div per il messaggio
-//     const messageDiv = document.createElement("div");
-//     messageDiv.className = className;
-//     messageDiv.textContent = text;
 
-//     // ➕ Aggiunge il messaggio alla chat
-//     chatBox.appendChild(messageDiv);
-
-//     // 📜 Fa scorrere automaticamente la chat verso il basso
-//     chatBox.scrollTop = chatBox.scrollHeight;
-
-//     // 💾 Salva il messaggio nella cronologia locale
-//     saveChatMessage(text, className);
-// }
 function appendMessage(text, className) {
     const messageDiv = document.createElement("div");
     messageDiv.className = className;
@@ -1086,7 +1066,6 @@ function appendMessage(text, className) {
         speakText(text);
     }
 }
-
 
 /**
  * 💾 Salva un messaggio nella cronologia del browser (localStorage)
