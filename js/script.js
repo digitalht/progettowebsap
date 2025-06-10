@@ -1347,7 +1347,7 @@ function tryQuickPatterns(message) {
 //     .then(res => res.json())
 //     .then(data => {
 //         const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta.";
-        
+
 //         // Il resto del codice rimane uguale...
 //         try {
 //             let jsonContent = reply.trim();
@@ -1426,8 +1426,8 @@ Rispondi SEMPRE in questo formato JSON:
 Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
     // Chiamata corretta per Vercel
-    fetch(`${urlPage}/openai/chat`, { 
-    //fetch(`https://40ea3209-885a-4a8d-98ec-bc5e8f53e063-00-5529wmky4j3q.janeway.replit.dev/openai/chat`, {  
+    fetch(`${urlPage}/openai/chat`, {
+        //fetch(`https://40ea3209-885a-4a8d-98ec-bc5e8f53e063-00-5529wmky4j3q.janeway.replit.dev/openai/chat`, {  
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -1437,73 +1437,73 @@ Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
             systemPrompt: systemPrompt
         })
     })
-    .then(async response => {
-        // Debug della risposta
-        console.log('Response status:', response.status);
-        console.log('Response headers:', [...response.headers.entries()]);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`HTTP ${response.status}:`, errorText);
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            console.error('Risposta non JSON:', text);
-            throw new Error(`Risposta non JSON: ${text.substring(0, 100)}...`);
-        }
-        
-        return response.json();
-    })
-    .then(data => {
-        console.log('Dati ricevuti:', data);
-        
-        // Controlla se c'è un errore nella risposta OpenAI
-        if (data.error) {
-            console.error('Errore OpenAI:', data.error);
-            appendMessage(`❌ Errore: ${data.error}`, "bot-message");
-            return;
-        }
-        
-        const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta.";
-        
-        try {
-            let jsonContent = reply.trim();
-            if (jsonContent.startsWith('```json')) {
-                jsonContent = jsonContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
-            } else if (jsonContent.startsWith('```')) {
-                jsonContent = jsonContent.replace(/```\s*/, '').replace(/```\s*$/, '');
+        .then(async response => {
+            // Debug della risposta
+            console.log('Response status:', response.status);
+            console.log('Response headers:', [...response.headers.entries()]);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`HTTP ${response.status}:`, errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
-            const aiResponse = JSON.parse(jsonContent);
-            if (aiResponse && typeof aiResponse === 'object' && aiResponse.action) {
-                executeAIAction(aiResponse);
-            } else {
-                appendMessage(reply, "bot-message");
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Risposta non JSON:', text);
+                throw new Error(`Risposta non JSON: ${text.substring(0, 100)}...`);
             }
-        } catch (e) {
-            console.log("Errore parsing JSON:", e);
-            console.log("Contenuto ricevuto:", reply);
-            if (parseAndExecuteFromText(reply)) {
+
+            return response.json();
+        })
+        .then(data => {
+            console.log('Dati ricevuti:', data);
+
+            // Controlla se c'è un errore nella risposta OpenAI
+            if (data.error) {
+                console.error('Errore OpenAI:', data.error);
+                appendMessage(`❌ Errore: ${data.error}`, "bot-message");
                 return;
             }
-            appendMessage(reply, "bot-message");
-        }
-    })
-    .catch(err => {
-        console.error("Errore completo:", err);
-        
-        // FALLBACK: Prova con pattern locali se il backend non funziona
-        appendMessage("🔄 Backend non disponibile, uso pattern locali...", "bot-message");
-        
-        if (tryAdvancedPatterns(message)) {
-            return;
-        }
-        
-        appendMessage("❌ Servizio AI temporaneamente non disponibile. Usa comandi specifici come 'tutti gli ordini' o 'ordine 123456'.", "bot-message");
-    });
+
+            const reply = data.choices?.[0]?.message?.content || "🤖 Nessuna risposta.";
+
+            try {
+                let jsonContent = reply.trim();
+                if (jsonContent.startsWith('```json')) {
+                    jsonContent = jsonContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
+                } else if (jsonContent.startsWith('```')) {
+                    jsonContent = jsonContent.replace(/```\s*/, '').replace(/```\s*$/, '');
+                }
+
+                const aiResponse = JSON.parse(jsonContent);
+                if (aiResponse && typeof aiResponse === 'object' && aiResponse.action) {
+                    executeAIAction(aiResponse);
+                } else {
+                    appendMessage(reply, "bot-message");
+                }
+            } catch (e) {
+                console.log("Errore parsing JSON:", e);
+                console.log("Contenuto ricevuto:", reply);
+                if (parseAndExecuteFromText(reply)) {
+                    return;
+                }
+                appendMessage(reply, "bot-message");
+            }
+        })
+        .catch(err => {
+            console.error("Errore completo:", err);
+
+            // FALLBACK: Prova con pattern locali se il backend non funziona
+            appendMessage("🔄 Backend non disponibile, uso pattern locali...", "bot-message");
+
+            if (tryAdvancedPatterns(message)) {
+                return;
+            }
+
+            appendMessage("❌ Servizio AI temporaneamente non disponibile. Usa comandi specifici come 'tutti gli ordini' o 'ordine 123456'.", "bot-message");
+        });
 }
 
 // Funzione di fallback con pattern avanzati
@@ -1511,7 +1511,7 @@ Se non capisci la richiesta, usa "action": "chat" per una risposta normale.`;
 
 function tryAdvancedPatterns(message) {
     const msgLower = message.toLowerCase();
-    
+
     // Pattern più complessi per quando l'AI non è disponibile
     const advancedPatterns = [
         {
@@ -1540,7 +1540,7 @@ function tryAdvancedPatterns(message) {
             }
         }
     ];
-    
+
     for (const pattern of advancedPatterns) {
         const match = message.match(pattern.regex);
         if (match) {
@@ -1548,7 +1548,7 @@ function tryAdvancedPatterns(message) {
             return true;
         }
     }
-    
+
     return false;
 }
 /**
@@ -1982,10 +1982,24 @@ function renderSAPData(entity, records) {
                      <div><strong>Fornitore:</strong> ${item.VendorName}</div>
                      <!-- 🔐 Pulsante per rilasciare l'ordine -->
                      <button 
-                        onclick="releaseOrder('${item.OrderNr}')" 
-                        style="margin-top:12px; background-color:#007BFF; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:500;">
-                        🔐 Rilascia ordine
-                    </button>
+        onclick="releaseOrder('${item.OrderNr}')" 
+        style="
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        "
+        onmouseover="this.style.backgroundColor='#0056b3'; this.style.transform='scale(1.05)'"
+        onmouseout="this.style.backgroundColor='#007BFF'; this.style.transform='scale(1)'"
+    >
+        🔐 Rilascia ordine
+    </button>
                 </div>
             `;
         } else {
