@@ -97,6 +97,7 @@ FUNZIONI DISPONIBILI:
 7. "list_vendors" - elenca tutti i fornitori
 8. "show_orders_by_year" - mostra ordini di un anno specifico
 9. "release_order" - rilascia un ordine specifico (serve il numero ordine)
+10. "show_orders_by_vendor_and_year" - mostra ordini di un fornitore specifico per un anno specifico
 
 CONTESTO ATTUALE:
 - Se l'utente ha visualizzato un ordine, puoi assumere che "rilascialo" o "rilascia questo" si riferisca all'ordine in questione.
@@ -112,6 +113,7 @@ ESEMPI DI RICHIESTE CHE DEVI RICONOSCERE:
 - "ordini tra il 2020 e il 2022", "ordini dal 2019 al 2023" → show_orders_by_year_range
 - "rilascia ordine 4500000869", "rilascia l'ordine numero 123" → release_order
 - "rilascia", "rilascialo", "rilascia questo ordine" → release_order (usa l'ordine nel contesto se disponibile)
+- "ordini del fornitore Cantina Fina del 2023", "fammi vedere gli ordini del 2024 per Rossi Spa" → show_orders_by_vendor_and_year
 
 Rispondi SEMPRE in questo formato JSON:
 {
@@ -220,7 +222,29 @@ function tryAdvancedPatterns(message) {
                 appendMessage("🔍 Recupero elenco fornitori...", "bot-message");
                 listVendors();
             }
-        }
+        },
+        {
+            regex: /ordini?\s+(?:del\s+)?fornitore?\s+(.+?)\s+(?:dell'|del|per l')?\s*(\d{4})/i,
+            action: (match) => {
+                const vendor = match[1].trim();
+                const year = match[2];
+                appendMessage(`🔍 Cerco ordini del fornitore "${vendor}" per l'anno ${year}...`, "bot-message");
+                const start = new Date(`${year}-01-01`);
+                const end = new Date(`${year}-12-31`);
+                getSAPEntityData("PurchaseOrderSet", null, { start, end }, vendor);
+            }
+        },
+        {
+            regex: /ordini?\s+(?:dell'|del|per l')?\s*(\d{4})\s+(?:del\s+)?fornitore?\s+(.+)/i,
+            action: (match) => {
+                const year = match[1];
+                const vendor = match[2].trim();
+                appendMessage(`🔍 Cerco ordini del fornitore "${vendor}" per l'anno ${year}...`, "bot-message");
+                const start = new Date(`${year}-01-01`);
+                const end = new Date(`${year}-12-31`);
+                getSAPEntityData("PurchaseOrderSet", null, { start, end }, vendor);
+            }
+        },
     ];
 
     for (const pattern of advancedPatterns) {
@@ -438,6 +462,18 @@ function executeAIAction(aiResponse) {
                 getSAPEntityData("PurchaseOrderSet", null, { start, end });
             } else {
                 appendMessage("❌ Anno non specificato", "bot-message");
+            }
+            break;
+        case "show_orders_by_vendor_and_year":
+            // 🏢📅 Mostra ordini di un fornitore specifico per un anno specifico
+            if (parameters.vendorName && parameters.year) {
+                const year = parseInt(parameters.year);
+                const startDate = new Date(`${year}-01-01`);
+                const endDate = new Date(`${year}-12-31`);
+                appendMessage(`🔍 Cerco ordini del fornitore "${parameters.vendorName}" per l'anno ${year}...`, "bot-message");
+                getSAPEntityData("PurchaseOrderSet", null, { start: startDate, end: endDate }, parameters.vendorName);
+            } else {
+                appendMessage("❌ Nome fornitore e/o anno non specificati per la ricerca combinata.", "bot-message");
             }
             break;
 
