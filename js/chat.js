@@ -98,6 +98,9 @@ FUNZIONI DISPONIBILI:
 8. "show_orders_by_year" - mostra ordini di un anno specifico
 9. "release_order" - rilascia un ordine specifico (serve il numero ordine)
 
+CONTESTO ATTUALE:
+- Se l'utente ha visualizzato un ordine, puoi assumere che "rilascialo" o "rilascia questo" si riferisca all'ordine in questione.
+
 ESEMPI DI RICHIESTE CHE DEVI RICONOSCERE:
 - "tutti gli ordini", "mostra ordini", "visualizza tutti gli ordini" → show_all_orders
 - "ordine 4500000869", "mostra ordine numero 123", "dettagli ordine" → show_specific_order
@@ -108,6 +111,7 @@ ESEMPI DI RICHIESTE CHE DEVI RICONOSCERE:
 - "ordini dopo il 2023", "ordini prima del 2022", "ordini dopo il 15/05/2023" → show_orders_by_date_filter  
 - "ordini tra il 2020 e il 2022", "ordini dal 2019 al 2023" → show_orders_by_year_range
 - "rilascia ordine 4500000869", "rilascia l'ordine numero 123" → release_order
+- "rilascia", "rilascialo", "rilascia questo ordine" → release_order (usa l'ordine nel contesto se disponibile)
 
 Rispondi SEMPRE in questo formato JSON:
 {
@@ -305,16 +309,32 @@ function parseAndExecuteFromText(text) {
         }
 
         // 🔐 Pattern per rilascio ordine
-        const releaseMatch = text.match(/rilascia.*?ordine.*?(\d{10})/i);
+        const releaseMatch = text.match(/rilascia(.*?ordine)?.*?(\d{10})?/i); // Aggiunto '?' per rendere l'ID opzionale
         if (releaseMatch) {
-            executeAIAction({
-                action: "release_order",
-                parameters: {
-                    orderId: releaseMatch[1]
-                },
-                response: `Rilascio ordine ${releaseMatch[1]}`
-            });
-            return true;
+            let orderId = releaseMatch[2]; // Prende il gruppo catturato per l'ID (se presente)
+
+            if (!orderId) {
+                // Se non c'è un ID nel messaggio, prova a prenderlo dal contesto
+                const currentOrderId = sessionStorage.getItem("currentOrderId");
+                if (currentOrderId) {
+                    orderId = currentOrderId;
+                    appendMessage(`🤖 Rilascio l'ordine attualmente visualizzato (${orderId})...`, "bot-message");
+                }
+            }
+
+            if (orderId) {
+                executeAIAction({
+                    action: "release_order",
+                    parameters: {
+                        orderId: orderId
+                    },
+                    response: `Rilascio ordine ${orderId}`
+                });
+                return true;
+            } else {
+                appendMessage("❌ Non è stato specificato alcun numero d'ordine per il rilascio.", "bot-message");
+                return false;
+            }
         }
 
     } catch (e) {
@@ -429,13 +449,34 @@ function executeAIAction(aiResponse) {
             }
             break;
 
+        // case "release_order":
+
+        //     // 🔐 Rilascia un ordine specifico
+        //     if (parameters.orderId) {
+        //         appendMessage(`🔐 Rilascio ordine ${parameters.orderId}...`, "bot-message");
+        //         releaseOrder(parameters.orderId);
+        //     } else {
+        //         appendMessage("❌ Numero ordine non specificato per il rilascio", "bot-message");
+        //     }
+        //     break;
         case "release_order":
             // 🔐 Rilascia un ordine specifico
-            if (parameters.orderId) {
-                appendMessage(`🔐 Rilascio ordine ${parameters.orderId}...`, "bot-message");
-                releaseOrder(parameters.orderId);
+            let orderToRelease = parameters.orderId;
+
+            if (!orderToRelease) {
+                // Se l'AI non ha fornito un orderId, controlla se c'è un ordine in contesto
+                const currentOrderId = sessionStorage.getItem("currentOrderId");
+                if (currentOrderId) {
+                    orderToRelease = currentOrderId;
+                    appendMessage(`🤖 Ho rilevato che vuoi rilasciare l'ordine attualmente visualizzato (${orderToRelease})...`, "bot-message");
+                }
+            }
+
+            if (orderToRelease) {
+                appendMessage(`🔐 Rilascio ordine ${orderToRelease}...`, "bot-message");
+                releaseOrder(orderToRelease);
             } else {
-                appendMessage("❌ Numero ordine non specificato per il rilascio", "bot-message");
+                appendMessage("❌ Non è stato specificato alcun numero d'ordine da rilasciare e nessun ordine è attualmente visualizzato.", "bot-message");
             }
             break;
     }
