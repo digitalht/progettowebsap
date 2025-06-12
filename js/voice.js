@@ -274,36 +274,43 @@ function removeListeningMessage() {
 }
 
 // Modifica della funzione appendMessage per supportare ID univoci e sintesi vocale automatica
+
 function appendMessage(message, className, returnId = false) {
-    // Usa chatBox invece di chat-container (dalla tua configurazione)
     if (!chatBox) {
         console.error('chatBox element not found');
         return null;
     }
-    
+
     const messageDiv = document.createElement('div');
     const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    
+
     messageDiv.id = messageId;
     messageDiv.className = `message ${className}`;
     messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
-    
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
-    
-    // 🔊 SINTESI VOCALE AUTOMATICA: Se è un messaggio del bot e la modalità vocale è attiva, leggi il messaggio
+
+    // Messaggio temporaneo: mostra e poi rimuove dopo 2 secondi
+    if (message.includes("Sto elaborando")) {
+        setTimeout(() => {
+            const el = document.getElementById(messageId);
+            if (el) el.remove();
+        }, 2000);
+        return messageId;
+    }
+
+    // 🔊 Sintesi vocale solo per messaggi del bot (escludi alcuni)
     if (className === 'bot-message' && isVoiceModeActive) {
-        // Non leggere il messaggio "Sto ascoltando..." (verrà rimosso comunque)
-        if (!message.includes("Sto ascoltando")) {
+        // NON leggere i messaggi "Sto ascoltando" o "Sto elaborando"
+        if (!message.includes("Sto ascoltando") && !message.includes("Sto elaborando")) {
             speakText(message);
         }
     }
-    
-    // Se la funzione è chiamata per il messaggio "Sto ascoltando...", ritorna l'ID
-    if (returnId || message.includes("Sto ascoltando")) {
+
+    if (returnId) {
         return messageId;
     }
-    
+
     return messageId;
 }
 
@@ -317,70 +324,167 @@ function processVoiceCommand(transcript) {
     callOpenAIWithFunctions(transcript);
 }
 
+// function speakText(text) {
+//     // Se la modalità vocale non è attiva, non parlare
+//     if (!isVoiceModeActive) {
+//         return;
+//     }
+    
+//     const cleanText = text.replace(/[🎯📋💬🔍✅❌🔄🎤🔊📤📥🏢📅🔐💾🎨📦📡🚀⚡]/g, '');
+
+//     if (speechSynthesis && cleanText.trim()) {
+//         speechSynthesis.cancel();
+        
+//         // Aspetta che le voci siano caricate
+//         const speak = () => {
+//             const utterance = new SpeechSynthesisUtterance(cleanText);
+//             utterance.lang = 'it-IT';
+//             utterance.rate = 0.9;
+//             utterance.pitch = 1;
+            
+//             // Prova a impostare una voce italiana se disponibile, altrimenti usa la prima disponibile
+//             const voices = speechSynthesis.getVoices();
+//             let selectedVoice = voices.find(voice => 
+//                 voice.lang.includes('it') || voice.lang.includes('IT')
+//             );
+            
+//             // Se non trova una voce italiana, usa la prima voce disponibile
+//             if (!selectedVoice && voices.length > 0) {
+//                 selectedVoice = voices[0];
+//             }
+            
+//             if (selectedVoice) {
+//                 utterance.voice = selectedVoice;
+//                 console.log('Usando voce:', selectedVoice.name, selectedVoice.lang);
+//             }
+            
+//             utterance.onstart = function() {
+//                 console.log('🔊 Inizio lettura:', cleanText.substring(0, 50) + '...');
+//                 // NON fermare il riconoscimento quando inizia a parlare
+//                 // Mantieni l'ascolto attivo in background
+//             };
+            
+//             utterance.onend = function() {
+//                 console.log('✅ Sintesi vocale completata');
+//                 // Dopo che ha finito di parlare, assicurati che l'ascolto sia attivo
+//                 if (isVoiceModeActive && !isCurrentlyListening) {
+//                     setTimeout(() => {
+//                         startListening();
+//                     }, 500);
+//                 }
+//             };
+            
+//             utterance.onerror = function(event) {
+//                 console.error('❌ Errore sintesi vocale:', event.error);
+//                 // Riavvia l'ascolto anche in caso di errore
+//                 if (isVoiceModeActive && !isCurrentlyListening) {
+//                     setTimeout(() => {
+//                         startListening();
+//                     }, 500);
+//                 }
+//             };
+            
+//             speechSynthesis.speak(utterance);
+//         };
+        
+//         // Se le voci non sono ancora caricate, aspetta
+//         if (speechSynthesis.getVoices().length === 0) {
+//             speechSynthesis.onvoiceschanged = () => {
+//                 speak();
+//                 speechSynthesis.onvoiceschanged = null;
+//             };
+//         } else {
+//             speak();
+//         }
+//     } else {
+//         console.log('⚠️ Sintesi vocale non disponibile o testo vuoto');
+//         // Riavvia l'ascolto comunque
+//         if (isVoiceModeActive && !isCurrentlyListening) {
+//             setTimeout(() => {
+//                 startListening();
+//             }, 500);
+//         }
+//     }
+// }
+
+// Funzione per testare la sintesi vocale
 function speakText(text) {
     // Se la modalità vocale non è attiva, non parlare
     if (!isVoiceModeActive) {
         return;
     }
-    
+
     const cleanText = text.replace(/[🎯📋💬🔍✅❌🔄🎤🔊📤📥🏢📅🔐💾🎨📦📡🚀⚡]/g, '');
 
     if (speechSynthesis && cleanText.trim()) {
         speechSynthesis.cancel();
-        
-        // Aspetta che le voci siano caricate
+
         const speak = () => {
             const utterance = new SpeechSynthesisUtterance(cleanText);
             utterance.lang = 'it-IT';
             utterance.rate = 0.9;
             utterance.pitch = 1;
-            
-            // Prova a impostare una voce italiana se disponibile, altrimenti usa la prima disponibile
+
             const voices = speechSynthesis.getVoices();
-            let selectedVoice = voices.find(voice => 
-                voice.lang.includes('it') || voice.lang.includes('IT')
+
+            // Prova a selezionare una voce femminile italiana specifica
+            const preferredVoices = [
+                'Google italiano',           // Chrome (desktop)
+                'Google Italiano Femminile', // Chrome (desktop, alternativa)
+                'Alice',                     // macOS
+                'Federica',                  // Windows
+                'Lucia'                      // Altra voce italiana possibile
+            ];
+
+            let selectedVoice = voices.find(voice =>
+                preferredVoices.some(name => voice.name.toLowerCase().includes(name.toLowerCase()))
             );
-            
-            // Se non trova una voce italiana, usa la prima voce disponibile
-            if (!selectedVoice && voices.length > 0) {
-                selectedVoice = voices[0];
+
+            // Se non trova una voce preferita, prova qualsiasi voce italiana femminile
+            if (!selectedVoice) {
+                selectedVoice = voices.find(voice =>
+                    voice.lang.startsWith('it') && voice.name.toLowerCase().includes('female')
+                );
             }
-            
+
+            // Se ancora nulla, ripiega sulla prima voce italiana trovata
+            if (!selectedVoice) {
+                selectedVoice = voices.find(voice => voice.lang.startsWith('it'));
+            }
+
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
-                console.log('Usando voce:', selectedVoice.name, selectedVoice.lang);
+                console.log('🎙️ Voce selezionata:', selectedVoice.name, `(${selectedVoice.lang})`);
+            } else {
+                console.warn('⚠️ Nessuna voce italiana trovata. Usando voce predefinita.');
             }
-            
-            utterance.onstart = function() {
+
+            utterance.onstart = function () {
                 console.log('🔊 Inizio lettura:', cleanText.substring(0, 50) + '...');
-                // NON fermare il riconoscimento quando inizia a parlare
-                // Mantieni l'ascolto attivo in background
             };
-            
-            utterance.onend = function() {
+
+            utterance.onend = function () {
                 console.log('✅ Sintesi vocale completata');
-                // Dopo che ha finito di parlare, assicurati che l'ascolto sia attivo
                 if (isVoiceModeActive && !isCurrentlyListening) {
                     setTimeout(() => {
                         startListening();
                     }, 500);
                 }
             };
-            
-            utterance.onerror = function(event) {
+
+            utterance.onerror = function (event) {
                 console.error('❌ Errore sintesi vocale:', event.error);
-                // Riavvia l'ascolto anche in caso di errore
                 if (isVoiceModeActive && !isCurrentlyListening) {
                     setTimeout(() => {
                         startListening();
                     }, 500);
                 }
             };
-            
+
             speechSynthesis.speak(utterance);
         };
-        
-        // Se le voci non sono ancora caricate, aspetta
+
+        // Se le voci non sono ancora caricate, aspetta che lo siano
         if (speechSynthesis.getVoices().length === 0) {
             speechSynthesis.onvoiceschanged = () => {
                 speak();
@@ -391,7 +495,6 @@ function speakText(text) {
         }
     } else {
         console.log('⚠️ Sintesi vocale non disponibile o testo vuoto');
-        // Riavvia l'ascolto comunque
         if (isVoiceModeActive && !isCurrentlyListening) {
             setTimeout(() => {
                 startListening();
@@ -400,7 +503,6 @@ function speakText(text) {
     }
 }
 
-// Funzione per testare la sintesi vocale
 function testSpeech() {
     console.log('🧪 Test sintesi vocale...');
     console.log('📢 Voci disponibili:', speechSynthesis.getVoices().length);
