@@ -275,44 +275,44 @@ function removeListeningMessage() {
 
 // Modifica della funzione appendMessage per supportare ID univoci e sintesi vocale automatica
 
-function appendMessage(message, className, returnId = false) {
-    if (!chatBox) {
-        console.error('chatBox element not found');
-        return null;
-    }
+// function appendMessage(message, className, returnId = false) {
+//     if (!chatBox) {
+//         console.error('chatBox element not found');
+//         return null;
+//     }
 
-    const messageDiv = document.createElement('div');
-    const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+//     const messageDiv = document.createElement('div');
+//     const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
-    messageDiv.id = messageId;
-    messageDiv.className = `message ${className}`;
-    messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+//     messageDiv.id = messageId;
+//     messageDiv.className = `message ${className}`;
+//     messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
+//     chatBox.appendChild(messageDiv);
+//     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // Messaggio temporaneo: mostra e poi rimuove dopo 2 secondi
-    if (message.includes("Sto elaborando")) {
-        setTimeout(() => {
-            const el = document.getElementById(messageId);
-            if (el) el.remove();
-        }, 2000);
-        return messageId;
-    }
+//     // Messaggio temporaneo: mostra e poi rimuove dopo 2 secondi
+//     if (message.includes("Sto elaborando")) {
+//         setTimeout(() => {
+//             const el = document.getElementById(messageId);
+//             if (el) el.remove();
+//         }, 2000);
+//         return messageId;
+//     }
 
-    // 🔊 Sintesi vocale solo per messaggi del bot (escludi alcuni)
-    if (className === 'bot-message' && isVoiceModeActive) {
-        // NON leggere i messaggi "Sto ascoltando" o "Sto elaborando"
-        if (!message.includes("Sto ascoltando") && !message.includes("Sto elaborando")) {
-            speakText(message);
-        }
-    }
+//     // 🔊 Sintesi vocale solo per messaggi del bot (escludi alcuni)
+//     if (className === 'bot-message' && isVoiceModeActive) {
+//         // NON leggere i messaggi "Sto ascoltando" o "Sto elaborando"
+//         if (!message.includes("Sto ascoltando") && !message.includes("Sto elaborando")) {
+//             speakText(message);
+//         }
+//     }
 
-    if (returnId) {
-        return messageId;
-    }
+//     if (returnId) {
+//         return messageId;
+//     }
 
-    return messageId;
-}
+//     return messageId;
+// }
 
 function processVoiceCommand(transcript) {
     // Rimuove eventuali messaggi "Sto ascoltando..." rimasti

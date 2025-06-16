@@ -8,13 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initSpeechRecognition();
 
     // Ripristino cronologia chat
-    // const history = JSON.parse(sessionStorage.getItem("chatHistory") || "[]");
-    // history.forEach(({ text, className }) => {
-    //     const div = document.createElement("div");
-    //     div.className = className;
-    //     div.textContent = text;
-    //     chatBox.appendChild(div);
-    // });
+
     const history = JSON.parse(sessionStorage.getItem("chatHistory") || "[]");
     history.forEach(({ text, className }) => {
         const div = document.createElement("div");

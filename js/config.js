@@ -101,16 +101,6 @@ function restoreViewState() {
 }
 
 
-// salva cronologia chat
-
-// function saveChatMessage(text, className) {
-//     const history = JSON.parse(sessionStorage.getItem("chatHistory") || "[]");
-//     history.push({ text, className });
-//     sessionStorage.setItem("chatHistory", JSON.stringify(history)); // ✅ salva correttamente in sessionStorage
-// }
-
-
-
 
 /**
  * 🧹 Cancella la cronologia della chat e i risultati SAP

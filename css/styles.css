@@ -160,7 +160,7 @@
  .chat-container {
 
      position: fixed;
-     overflow: scroll;
+     overflow: hidden;
      backdrop-filter: blur(10px);
      border-radius: 20px;
      /* Posizionamento fisso rispetto alla finestra */

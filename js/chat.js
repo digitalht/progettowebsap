@@ -1,45 +1,105 @@
 // 🗨️ GESTIONE MESSAGGI CHAT E AI
 // ============chat.js===================
 
-function appendMessage(text, className) {
-    const messageDiv = document.createElement("div");
-    messageDiv.className = className;
-    messageDiv.textContent = text;
+/**
+ * AGGIUNTA MESSAGGI ALLA CHAT CON GESTIONE COMPLETA
+ * Crea e visualizza un nuovo messaggio nella chat box con funzionalità avanzate
+ * @param {string} message - Il testo del messaggio da visualizzare
+ * @param {string} className - La classe CSS per lo stile del messaggio
+ * @param {boolean} returnId - Se true, ritorna l'ID del messaggio creato
+ * @returns {string|null} L'ID del messaggio o null se errore
+ */
+function appendMessage(message, className, returnId = false) {
+    // Verifica che l'elemento chatBox esista nel DOM
+    if (!chatBox) {
+        console.error('chatBox element not found');
+        return null;
+    }
 
+    // Crea un nuovo elemento div per il messaggio
+    const messageDiv = document.createElement("div");
+    // Genera un ID univoco combinando timestamp e stringa random
+    const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    // Imposta ID, classe CSS e contenuto HTML del messaggio
+    messageDiv.id = messageId;
+    messageDiv.className = `message ${className}`;
+    messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
+    
+    // Aggiunge il messaggio alla chat e scrolla in basso
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
-
-    console.log("ciao")
-
-
-    saveChatMessage(text, className);
-
-    if (className === "bot-message" && isVoiceModeActive) {
-        speakText(text);
+    
+    // 🚫 Escludi messaggi temporanei dal salvataggio
+    // Salva solo messaggi permanenti (non quelli di elaborazione)
+    if (!message.includes("Sto elaborando")) {
+        if (typeof saveChatMessage === 'function') {
+            saveChatMessage(message, className);
+        }
     }
+
+    // Gestione messaggi temporanei: rimuove automaticamente dopo 2 secondi
+    if (message.includes("Sto elaborando")) {
+        setTimeout(() => {
+            const el = document.getElementById(messageId);
+            if (el) el.remove();
+        }, 2000);
+        return messageId;
+    }
+    
+    // 🔊 Sintesi vocale (solo per messaggi del bot, escludendo alcuni tipi)
+    if (className === "bot-message" && isVoiceModeActive) {
+        if (!message.includes("Sto ascoltando") && !message.includes("Sto elaborando")) {
+            speakText(message);
+        }
+    }
+
+    return returnId ? messageId : messageId;
 }
 
+/**
+ * SALVATAGGIO PERSISTENTE DELLA CRONOLOGIA CHAT
+ * Memorizza i messaggi nel sessionStorage per mantenere la cronologia
+ * @param {string} text - Il testo del messaggio da salvare
+ * @param {string} className - La classe CSS del messaggio (user/bot)
+ */
 function saveChatMessage(text, className) {
+    // Recupera la cronologia esistente dal sessionStorage o inizializza array vuoto
     const history = JSON.parse(sessionStorage.getItem("chatHistory") || "[]");
+    
+    // Aggiunge il nuovo messaggio alla cronologia
     history.push({ text, className });
+    
+    // Salva la cronologia aggiornata nel sessionStorage
     sessionStorage.setItem("chatHistory", JSON.stringify(history));
-    console.log("💾 Chat salvata in sessionStorage:", history);
-    console.log("✅ Messaggio salvato:", { text, className });
-    console.log("📦 sessionStorage attuale:", JSON.parse(sessionStorage.getItem("chatHistory")));
+    
+   
+    // console.log("📦 sessionStorage attuale:", JSON.parse(sessionStorage.getItem("chatHistory")));
 }
 
-
+/**
+ * INVIO MESSAGGIO UTENTE CON GESTIONE COMPLETA
+ * Gestisce l'invio di un messaggio dall'utente, inclusa validazione e routing
+ */
 function sendMessage() {
+    // Ottiene e pulisce il messaggio dall'input utente
     const message = userInput.value.trim();
+    
+    // Esce se il messaggio è vuoto
     if (message === "") return;
 
+    // Visualizza il messaggio dell'utente nella chat
     appendMessage(message, "user-message");
+    
+    // Pulisce il campo di input
     userInput.value = "";
 
+    // Prova prima con pattern di risposta rapida (scorciatoie)
     if (tryQuickPatterns(message)) {
-        return;
+        return; // Se trova un pattern rapido, esce senza chiamare l'AI
     }
 
+    // Se non ci sono pattern rapidi, invia il messaggio all'AI
     callOpenAIWithFunctions(message);
 }
 
@@ -98,6 +158,8 @@ FUNZIONI DISPONIBILI:
 8. "show_orders_by_year" - mostra ordini di un anno specifico
 9. "release_order" - rilascia un ordine specifico (serve il numero ordine)
 10. "show_orders_by_vendor_and_year" - mostra ordini di un fornitore specifico per un anno specifico
+11. "show_released_orders" - mostra solo gli ordini rilasciati
+12. "show_unreleased_orders" - mostra solo gli ordini non rilasciati
 
 CONTESTO ATTUALE:
 - Se l'utente ha visualizzato un ordine, puoi assumere che "rilascialo" o "rilascia questo" si riferisca all'ordine in questione.
@@ -114,6 +176,8 @@ ESEMPI DI RICHIESTE CHE DEVI RICONOSCERE:
 - "rilascia ordine 4500000869", "rilascia l'ordine numero 123" → release_order
 - "rilascia", "rilascialo", "rilascia questo ordine" → release_order (usa l'ordine nel contesto se disponibile)
 - "ordini del fornitore Cantina Fina del 2023", "fammi vedere gli ordini del 2024 per Rossi Spa" → show_orders_by_vendor_and_year
+- "ordini rilasciati", "fammi vedere gli ordini rilasciati", "mostra ordini rilasciati" → show_released_orders
+- "ordini non rilasciati", "fammi vedere gli ordini non rilasciati", "mostra ordini non rilasciati" → show_unreleased_orders
 
 Rispondi SEMPRE in questo formato JSON:
 {
@@ -485,16 +549,18 @@ function executeAIAction(aiResponse) {
             }
             break;
 
-        // case "release_order":
+       // NUOVI CASI PER ORDINI RILASCIATI/NON RILASCIATI
+        case "show_released_orders":
+            // ✅ Mostra solo ordini rilasciati
+            appendMessage("🔍 Recupero tutti gli ordini rilasciati...", "bot-message");
+            getSAPEntityData("PurchaseOrderSet", null, null, null, { released: true });
+            break;
 
-        //     // 🔐 Rilascia un ordine specifico
-        //     if (parameters.orderId) {
-        //         appendMessage(`🔐 Rilascio ordine ${parameters.orderId}...`, "bot-message");
-        //         releaseOrder(parameters.orderId);
-        //     } else {
-        //         appendMessage("❌ Numero ordine non specificato per il rilascio", "bot-message");
-        //     }
-        //     break;
+        case "show_unreleased_orders":
+            // ❌ Mostra solo ordini non rilasciati
+            appendMessage("🔍 Recupero tutti gli ordini non rilasciati...", "bot-message");
+            getSAPEntityData("PurchaseOrderSet", null, null, null, { released: false });
+            break;
         case "release_order":
             // 🔐 Rilascia un ordine specifico
             let orderToRelease = parameters.orderId;
