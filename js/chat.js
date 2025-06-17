@@ -25,11 +25,11 @@ function appendMessage(message, className, returnId = false) {
     messageDiv.id = messageId;
     messageDiv.className = `message ${className}`;
     messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
-    
+
     // Aggiunge il messaggio alla chat e scrolla in basso
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
-    
+
     // 🚫 Escludi messaggi temporanei dal salvataggio
     // Salva solo messaggi permanenti (non quelli di elaborazione)
     if (!message.includes("Sto elaborando")) {
@@ -46,7 +46,7 @@ function appendMessage(message, className, returnId = false) {
         }, 2000);
         return messageId;
     }
-    
+
     // 🔊 Sintesi vocale (solo per messaggi del bot, escludendo alcuni tipi)
     if (className === "bot-message" && isVoiceModeActive) {
         if (!message.includes("Sto ascoltando") && !message.includes("Sto elaborando")) {
@@ -66,14 +66,14 @@ function appendMessage(message, className, returnId = false) {
 function saveChatMessage(text, className) {
     // Recupera la cronologia esistente dal sessionStorage o inizializza array vuoto
     const history = JSON.parse(sessionStorage.getItem("chatHistory") || "[]");
-    
+
     // Aggiunge il nuovo messaggio alla cronologia
     history.push({ text, className });
-    
+
     // Salva la cronologia aggiornata nel sessionStorage
     sessionStorage.setItem("chatHistory", JSON.stringify(history));
-    
-   
+
+
     // console.log("📦 sessionStorage attuale:", JSON.parse(sessionStorage.getItem("chatHistory")));
 }
 
@@ -84,13 +84,13 @@ function saveChatMessage(text, className) {
 function sendMessage() {
     // Ottiene e pulisce il messaggio dall'input utente
     const message = userInput.value.trim();
-    
+
     // Esce se il messaggio è vuoto
     if (message === "") return;
 
     // Visualizza il messaggio dell'utente nella chat
     appendMessage(message, "user-message");
-    
+
     // Pulisce il campo di input
     userInput.value = "";
 
@@ -160,6 +160,9 @@ FUNZIONI DISPONIBILI:
 10. "show_orders_by_vendor_and_year" - mostra ordini di un fornitore specifico per un anno specifico
 11. "show_released_orders" - mostra solo gli ordini rilasciati
 12. "show_unreleased_orders" - mostra solo gli ordini non rilasciati
+13. "show_orders_by_month_year" - mostra ordini di un mese specifico di un anno
+14. "show_orders_by_day" - mostra ordini di un giorno specifico
+15. "show_orders_by_month" - mostra ordini di un mese specifico (tutti gli anni)
 
 CONTESTO ATTUALE:
 - Se l'utente ha visualizzato un ordine, puoi assumere che "rilascialo" o "rilascia questo" si riferisca all'ordine in questione.
@@ -178,6 +181,10 @@ ESEMPI DI RICHIESTE CHE DEVI RICONOSCERE:
 - "ordini del fornitore Cantina Fina del 2023", "fammi vedere gli ordini del 2024 per Rossi Spa" → show_orders_by_vendor_and_year
 - "ordini rilasciati", "fammi vedere gli ordini rilasciati", "mostra ordini rilasciati" → show_released_orders
 - "ordini non rilasciati", "fammi vedere gli ordini non rilasciati", "mostra ordini non rilasciati" → show_unreleased_orders
+- "ordini di gennaio 2024", "ordini del marzo 2023", "ordini febbraio 2024" → show_orders_by_month_year
+- "ordini di gennaio", "ordini del marzo", "ordini di dicembre" → show_orders_by_month
+- "ordini del 15/03/2024", "ordini di oggi", "ordini del giorno 12/01/2023" → show_orders_by_day
+- "ordini del 3/2024", "ordini del mese 05/2023" → show_orders_by_month_year
 
 Rispondi SEMPRE in questo formato JSON:
 {
@@ -186,6 +193,10 @@ Rispondi SEMPRE in questo formato JSON:
     "orderId": "numero_ordine_se_necessario",
     "vendorName": "nome_fornitore_se_necessario",
     "year": "anno_se_necessario",
+    "month": "mese_se_necessario_numero_1-12",
+    "monthName": "nome_mese_se_necessario",
+    "day": "giorno_se_necessario",
+    "specificDate": "data_specifica_se_necessaria_formato_dd/mm/yyyy",
     "startDate": "data_inizio_se_necessario_formato_dd/mm/yyyy",
     "endDate": "data_fine_se_necessario_formato_dd/mm/yyyy",
     "dateOperator": "before_o_after_se_necessario",
@@ -309,6 +320,80 @@ function tryAdvancedPatterns(message) {
                 getSAPEntityData("PurchaseOrderSet", null, { start, end }, vendor);
             }
         },
+        {
+            regex: /ordini?\s+(?:di|del|del mese di|del mese)\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre|\d{1,2})\s+(\d{4})/i,
+            action: (match) => {
+                const monthInput = match[1];
+                const year = match[2];
+                const month = getMonthNumber(monthInput);
+
+                if (month < 1 || month > 12) {
+                    appendMessage("❌ Mese non valido", "bot-message");
+                    return;
+                }
+
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 0);
+                const monthName = new Date(year, month - 1, 1).toLocaleDateString('it-IT', { month: 'long' });
+
+                appendMessage(`🔍 Cerco ordini di ${monthName} ${year}...`, "bot-message");
+                getSAPEntityData("PurchaseOrderSet", null, { start: startDate, end: endDate });
+            }
+        },
+        {
+            regex: /ordini?\s+(?:di|del|del mese di|del mese)\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre|\d{1,2})(?!\s+\d{4})/i,
+            action: (match) => {
+                const monthInput = match[1];
+                const month = getMonthNumber(monthInput);
+
+                if (month < 1 || month > 12) {
+                    appendMessage("❌ Mese non valido", "bot-message");
+                    return;
+                }
+
+                const monthName = new Date(2024, month - 1, 1).toLocaleDateString('it-IT', { month: 'long' });
+                appendMessage(`🔍 Cerco tutti gli ordini di ${monthName} (tutti gli anni)...`, "bot-message");
+                getSAPEntityData_withMonthFilter("PurchaseOrderSet", month);
+            }
+        },
+        {
+            regex: /ordini?\s+(?:del|di oggi|del giorno)\s*(\d{1,2}\/\d{1,2}\/\d{4})?/i,
+            action: (match) => {
+                let dateStr = match[1];
+
+                if (!dateStr) {
+                    // Se non è specificata una data, usa oggi
+                    const today = new Date();
+                    dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+                }
+
+                const targetDate = parseDate(dateStr);
+                const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+                const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59);
+
+                appendMessage(`🔍 Cerco ordini del ${dateStr}...`, "bot-message");
+                getSAPEntityData("PurchaseOrderSet", null, { start: startDate, end: endDate });
+            }
+        },
+        {
+            regex: /ordini?\s+del\s+(\d{1,2})\/(\d{4})/i,
+            action: (match) => {
+                const month = parseInt(match[1]);
+                const year = match[2];
+
+                if (month < 1 || month > 12) {
+                    appendMessage("❌ Mese non valido", "bot-message");
+                    return;
+                }
+
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 0);
+                const monthName = new Date(year, month - 1, 1).toLocaleDateString('it-IT', { month: 'long' });
+
+                appendMessage(`🔍 Cerco ordini di ${monthName} ${year}...`, "bot-message");
+                getSAPEntityData("PurchaseOrderSet", null, { start: startDate, end: endDate });
+            }
+        }
     ];
 
     for (const pattern of advancedPatterns) {
@@ -549,7 +634,7 @@ function executeAIAction(aiResponse) {
             }
             break;
 
-       // NUOVI CASI PER ORDINI RILASCIATI/NON RILASCIATI
+        // NUOVI CASI PER ORDINI RILASCIATI/NON RILASCIATI
         case "show_released_orders":
             // ✅ Mostra solo ordini rilasciati
             appendMessage("🔍 Recupero tutti gli ordini rilasciati...", "bot-message");
@@ -579,6 +664,62 @@ function executeAIAction(aiResponse) {
                 releaseOrder(orderToRelease);
             } else {
                 appendMessage("❌ Non è stato specificato alcun numero d'ordine da rilasciare e nessun ordine è attualmente visualizzato.", "bot-message");
+            }
+            break;
+
+        case "show_orders_by_month_year":
+            // 📅 Mostra ordini di un mese specifico di un anno
+            if ((parameters.month || parameters.monthName) && parameters.year) {
+                const month = parameters.month || getMonthNumber(parameters.monthName);
+                const year = parseInt(parameters.year);
+
+                if (month < 1 || month > 12) {
+                    appendMessage("❌ Mese non valido", "bot-message");
+                    break;
+                }
+
+                const startDate = new Date(year, month - 1, 1); // month-1 perché Date usa 0=gennaio
+                const endDate = new Date(year, month, 0); // Ultimo giorno del mese
+
+                const monthName = new Date(year, month - 1, 1).toLocaleDateString('it-IT', { month: 'long' });
+                appendMessage(`🔍 Cerco ordini di ${monthName} ${year}...`, "bot-message");
+                getSAPEntityData("PurchaseOrderSet", null, { start: startDate, end: endDate });
+            } else {
+                appendMessage("❌ Mese e anno non specificati", "bot-message");
+            }
+            break;
+
+        case "show_orders_by_day":
+            // 📅 Mostra ordini di un giorno specifico
+            if (parameters.specificDate) {
+                const targetDate = parseDate(parameters.specificDate);
+                const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+                const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59);
+
+                appendMessage(`🔍 Cerco ordini del ${parameters.specificDate}...`, "bot-message");
+                getSAPEntityData("PurchaseOrderSet", null, { start: startDate, end: endDate });
+            } else {
+                appendMessage("❌ Data non specificata", "bot-message");
+            }
+            break;
+
+        case "show_orders_by_month":
+            // 📅 Mostra ordini di un mese specifico (tutti gli anni)
+            if (parameters.month || parameters.monthName) {
+                const month = parameters.month || getMonthNumber(parameters.monthName);
+
+                if (month < 1 || month > 12) {
+                    appendMessage("❌ Mese non valido", "bot-message");
+                    break;
+                }
+
+                const monthName = new Date(2024, month - 1, 1).toLocaleDateString('it-IT', { month: 'long' });
+                appendMessage(`🔍 Cerco tutti gli ordini di ${monthName} (tutti gli anni)...`, "bot-message");
+
+                // Per questo caso, dobbiamo modificare la funzione getSAPEntityData per supportare il filtro solo per mese
+                getSAPEntityData_withMonthFilter("PurchaseOrderSet", month);
+            } else {
+                appendMessage("❌ Mese non specificato", "bot-message");
             }
             break;
     }

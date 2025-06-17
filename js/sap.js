@@ -501,3 +501,44 @@ function listVendors() {
         sapResults.innerHTML = "❌ Errore durante il recupero fornitori.";
     });
 }
+
+// 4. AGGIUNGI QUESTA NUOVA FUNZIONE PER GESTIRE IL FILTRO SOLO PER MESE
+function getSAPEntityData_withMonthFilter(entity, month) {
+    sapResults.innerHTML = "🔄 Caricamento dati...";
+    const url = `${urlPage}/sap/${entity}`;
+
+    fetch(url, {
+        method: "GET",
+        headers: {
+            "Authorization": "Basic " + btoa("rcarini:Velcome24"),
+            "Accept": "application/json"
+        }
+    })
+    .then(async response => {
+        const contentType = response.headers.get("content-type");
+        if (!response.ok) throw new Error(await response.text());
+        if (contentType.includes("application/json")) return response.json();
+        throw new Error("Risposta non in formato JSON");
+    })
+    .then(data => {
+        let results = data?.d?.results || [];
+
+        // Filtra per mese (indipendentemente dall'anno)
+        results = results.filter(o => {
+            const sapDate = new Date(parseInt(o.MinDelivDate.match(/\d+/)?.[0] || "0"));
+            return sapDate.getMonth() + 1 === month; // +1 perché getMonth() restituisce 0-11
+        });
+
+        if (results.length === 0) {
+            const monthName = new Date(2024, month - 1, 1).toLocaleDateString('it-IT', { month: 'long' });
+            sapResults.innerHTML = `⚠️ Nessun ordine trovato per il mese di ${monthName}.`;
+            return;
+        }
+
+        renderSAPData(entity, results);
+    })
+    .catch(error => {
+        console.error("Errore SAP:", error);
+        sapResults.innerHTML = `❌ Errore durante il recupero dati da SAP: ${error.message}`;
+    });
+}

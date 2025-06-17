@@ -42,6 +42,20 @@ function parseDate(dateStr) {
     return new Date(dateStr);
 }
 
+// 2.  QUESTA FUNZIONE HELPER PER CONVERTIRE NOMI MESI IN NUMERI
+function getMonthNumber(monthName) {
+    const months = {
+        'gennaio': 1, 'febbraio': 2, 'marzo': 3, 'aprile': 4,
+        'maggio': 5, 'giugno': 6, 'luglio': 7, 'agosto': 8,
+        'settembre': 9, 'ottobre': 10, 'novembre': 11, 'dicembre': 12,
+        'gen': 1, 'feb': 2, 'mar': 3, 'apr': 4,
+        'mag': 5, 'giu': 6, 'lug': 7, 'ago': 8,
+        'set': 9, 'ott': 10, 'nov': 11, 'dic': 12
+    };
+    
+    return months[monthName.toLowerCase()] || parseInt(monthName);
+}
+
 /**
  * 📅 Formatta una data SAP in formato leggibile italiano
  */
