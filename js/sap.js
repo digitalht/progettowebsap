@@ -250,8 +250,8 @@ function renderSAPData(entity, records, releaseFilter = null) {
         if (entity === "PurchaseOrderSet") {
             // 📦 Template per ordini di acquisto con indicatore stato rilascio più evidente
             const releaseStatus = item.IsReleased ? 
-                `<span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ RILASCIATO</span>` : ``;
-                // `<span style="background: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">❌ NON RILASCIATO</span>`;
+                `<span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ RILASCIATO</span>` :
+                `<span style="background: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">❌ NON RILASCIATO</span>`;
             
             return `
                 <div style="border:1px solid #ddd; padding:16px; margin:12px 0; border-radius:8px; background:#fafafa; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition:box-shadow 0.2s;" 
@@ -280,7 +280,7 @@ function renderSAPData(entity, records, releaseFilter = null) {
                     onclick="getSingleOrder('${item.OrderNr}')">
                         <span style="font-size: 18px;">📄</span>
                         <span>Ordine #${item.OrderNr}</span>
-                        ${releaseStatus}
+                       
                     </div>
                      <!-- 📅 Informazioni principali dell'ordine -->
                      <div><strong>Data:</strong> ${formatSAPDate(item.MinDelivDate)}</div>
