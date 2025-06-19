@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Avanzate - AI Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .analytics-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 2rem auto;
+            gap: 2rem;
+            padding: 0 1rem;
+        }
+
+        .chat-panel {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 0.5rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8fafc;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .chat-input input {
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input input:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 15px 15px 4px 15px;
+            margin: 8px 0;
+            margin-left: 15%;
+            word-wrap: break-word;
+            font-size: 0.9rem;
+        }
+
+        .bot-message {
+            background: #f7fafc;
+            color: #2d3748;
+            padding: 10px 14px;
+            border-radius: 15px 15px 15px 4px;
+            margin: 8px 0;
+            margin-right: 15%;
+            border-left: 4px solid #4299e1;
+            font-size: 0.9rem;
+        }
+
+        .analytics-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .analytics-title {
+            font-size: 1.5rem;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            border-left: 4px solid #4299e1;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .quick-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .prompt-btn {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .prompt-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #718096;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .analytics-container {
+                flex-direction: column;
+            }
+
+            .chat-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>
+            <a href="../index.html" title="Vai alla Home" style="text-decoration: none; color: inherit;">
+                🏢
+            </a>
+        </h1>
+        <h1>📊 Analytics Avanzate - AI Assistant</h1>
+
+    </div>
+
+    <div class="analytics-container">
+        <!-- Chat Panel -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h3>🤖 Analytics AI</h3>
+                <div>
+                    <button class="control-btn" onclick="clearChat()">🗑️</button>
+                    <button class="control-btn" onclick="exportChart()">📊</button>
+                </div>
+            </div>
+
+            <div class="quick-prompts">
+                <button class="prompt-btn" onclick="quickPrompt('grafico vendite mensili')">📈 Vendite Mensili</button>
+                <button class="prompt-btn" onclick="quickPrompt('ordini per fornitore')">🏢 Per Fornitore</button>
+                <button class="prompt-btn" onclick="quickPrompt('trend ultimi 6 mesi')">📊 Trend 6 Mesi</button>
+                <button class="prompt-btn" onclick="quickPrompt('confronto trimestrale')">📉 Confronto
+                    Trimestri</button>
+                <button class="prompt-btn" onclick="quickPrompt('top 10 prodotti')">🔝 Top Prodotti</button>
+                <button class="prompt-btn" onclick="quickPrompt('analisi costi')">💰 Analisi Costi</button>
+            </div>
+
+            <div class="chat-box" id="chat-box">
+                <div class="bot-message">
+                    👋 Ciao! Sono il tuo assistente per le Analytics Avanzate.
+                    <br><br>
+                    Scrivi cosa vuoi analizzare e creerò grafici dinamici per te:
+                    <br>• "Mostra vendite per mese"
+                    <br>• "Grafico ordini per fornitore"
+                    <br>• "Trend fatturato 2024"
+                    <br>• "Confronta Q1 vs Q2"
+                    <br><br>
+                    Inizia digitando la tua richiesta! 📊
+                </div>
+            </div>
+
+            <div class="chat-input">
+                <input type="text" id="user-input" placeholder="Scrivi la tua richiesta di analisi...">
+                <button class="send-btn" onclick="sendMessage()">Invia</button>
+            </div>
+        </div>
+
+        <!-- Analytics Panel -->
+        <div class="analytics-panel">
+            <div class="analytics-header">
+                <div class="analytics-title">Dashboard Analytics</div>
+                <div id="last-updated">Ultimo aggiornamento: --</div>
+            </div>
+
+            <div class="stats-grid" id="stats-grid">
+                <!-- Stats cards will be inserted here -->
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title" id="chart-title">Benvenuto nel Dashboard Analytics</div>
+                <div id="chart-area">
+                    <div style="text-align: center; padding: 4rem; color: #718096;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                        <h3>Inizia la tua analisi</h3>
+                        <p>Scrivi una richiesta nella chat per generare grafici dinamici</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        let chatHistory = [];
+
+        // Sample data generator
+        function generateSampleData(type, prompt) {
+            const currentMonth = new Date().getMonth();
+            const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+
+            switch (type) {
+                case 'vendite_mensili':
+                    return {
+                        labels: months.slice(0, currentMonth + 1),
+                        datasets: [{
+                            label: 'Vendite (€)',
+                            data: Array.from({ length: currentMonth + 1 }, () => Math.floor(Math.random() * 50000) + 20000),
+                            borderColor: '#4299e1',
+                            backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        }]
+                    };
+
+                case 'fornitori':
+                    const fornitori = ['Fornitore A', 'Fornitore B', 'Fornitore C', 'Fornitore D', 'Fornitore E'];
+                    return {
+                        labels: fornitori,
+                        datasets: [{
+                            label: 'Ordini',
+                            data: fornitori.map(() => Math.floor(Math.random() * 100) + 20),
+                            backgroundColor: [
+                                '#4299e1', '#48bb78', '#ed8936', '#9f7aea', '#f56565'
+                            ],
+                            borderWidth: 0
+                        }]
+                    };
+
+                case 'trend':
+                    const last6Months = months.slice(Math.max(0, currentMonth - 5), currentMonth + 1);
+                    return {
+                        labels: last6Months,
+                        datasets: [{
+                            label: 'Fatturato (€)',
+                            data: last6Months.map(() => Math.floor(Math.random() * 80000) + 40000),
+                            borderColor: '#48bb78',
+                            backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        }]
+                    };
+
+                case 'confronto':
+                    return {
+                        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                        datasets: [{
+                            label: '2023',
+                            data: [120000, 150000, 130000, 180000],
+                            backgroundColor: 'rgba(66, 153, 225, 0.7)',
+                            borderColor: '#4299e1',
+                            borderWidth: 2
+                        }, {
+                            label: '2024',
+                            data: [140000, 170000, 160000, 200000],
+                            backgroundColor: 'rgba(72, 187, 120, 0.7)',
+                            borderColor: '#48bb78',
+                            borderWidth: 2
+                        }]
+                    };
+
+                case 'prodotti':
+                    const prodotti = ['Prodotto A', 'Prodotto B', 'Prodotto C', 'Prodotto D', 'Prodotto E', 'Prodotto F', 'Prodotto G', 'Prodotto H', 'Prodotto I', 'Prodotto J'];
+                    return {
+                        labels: prodotti,
+                        datasets: [{
+                            label: 'Vendite',
+                            data: prodotti.map(() => Math.floor(Math.random() * 500) + 100),
+                            backgroundColor: 'rgba(66, 153, 225, 0.7)',
+                            borderColor: '#4299e1',
+                            borderWidth: 2
+                        }]
+                    };
+
+                default:
+                    return {
+                        labels: months.slice(0, 6),
+                        datasets: [{
+                            label: 'Dati Generici',
+                            data: Array.from({ length: 6 }, () => Math.floor(Math.random() * 1000) + 100),
+                            borderColor: '#9f7aea',
+                            backgroundColor: 'rgba(159, 122, 234, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        }]
+                    };
+            }
+        }
+
+        function analyzePrompt(prompt) {
+            const lower = prompt.toLowerCase();
+
+            if (lower.includes('vendite') && (lower.includes('mese') || lower.includes('mensil'))) {
+                return { type: 'vendite_mensili', chartType: 'line', title: 'Vendite Mensili 2024' };
+            } else if (lower.includes('fornitore') || lower.includes('supplier')) {
+                return { type: 'fornitori', chartType: 'doughnut', title: 'Distribuzione Ordini per Fornitore' };
+            } else if (lower.includes('trend') || lower.includes('andamento')) {
+                return { type: 'trend', chartType: 'line', title: 'Trend Fatturato Ultimi 6 Mesi' };
+            } else if (lower.includes('confronto') || lower.includes('trimest') || lower.includes('quarter')) {
+                return { type: 'confronto', chartType: 'bar', title: 'Confronto Trimestrale 2023 vs 2024' };
+            } else if (lower.includes('prodott') || lower.includes('top')) {
+                return { type: 'prodotti', chartType: 'bar', title: 'Top 10 Prodotti per Vendite' };
+            } else if (lower.includes('costi') || lower.includes('spese')) {
+                return { type: 'trend', chartType: 'line', title: 'Analisi Costi Mensili' };
+            } else {
+                return { type: 'default', chartType: 'line', title: 'Analisi Personalizzata' };
+            }
+        }
+
+        function createChart(data, type, title) {
+            const ctx = document.getElementById('dynamicChart');
+            if (ctx) ctx.remove();
+
+            const canvas = document.createElement('canvas');
+            canvas.id = 'dynamicChart';
+            canvas.width = 400;
+            canvas.height = 300;
+
+            document.getElementById('chart-area').innerHTML = '';
+            document.getElementById('chart-area').appendChild(canvas);
+
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const config = {
+                type: type,
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: type !== 'doughnut' ? {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    } : {}
+                }
+            };
+
+            currentChart = new Chart(canvas, config);
+            document.getElementById('chart-title').textContent = title;
+            document.getElementById('last-updated').textContent = `Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}`;
+        }
+
+        function updateStats(type) {
+            const statsGrid = document.getElementById('stats-grid');
+
+            let stats = [];
+            switch (type) {
+                case 'vendite_mensili':
+                    stats = [
+                        { value: '€47.2K', label: 'Media Mensile' },
+                        { value: '+12%', label: 'Crescita MoM' },
+                        { value: '€284K', label: 'Totale YTD' },
+                        { value: '89%', label: 'Target Raggiunto' }
+                    ];
+                    break;
+                case 'fornitori':
+                    stats = [
+                        { value: '24', label: 'Fornitori Attivi' },
+                        { value: '€156K', label: 'Valore Medio Ordine' },
+                        { value: '94%', label: 'Puntualità Consegne' },
+                        { value: '7.2', label: 'Rating Medio' }
+                    ];
+                    break;
+                default:
+                    stats = [
+                        { value: '€125K', label: 'Totale Periodo' },
+                        { value: '+8.5%', label: 'Variazione' },
+                        { value: '342', label: 'Transazioni' },
+                        { value: '96%', label: 'Efficienza' }
+                    ];
+            }
+
+            statsGrid.innerHTML = stats.map(stat => `
+                <div class="stat-card">
+                    <div class="stat-value">${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                </div>
+            `).join('');
+        }
+
+        function addMessage(message, isUser = false) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'user-message' : 'bot-message';
+            messageDiv.textContent = message;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            chatHistory.push({ message, isUser, timestamp: new Date() });
+        }
+
+        function showLoading() {
+            const chartArea = document.getElementById('chart-area');
+            chartArea.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Generando grafico...</span>
+                </div>
+            `;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            addMessage(message, true);
+            input.value = '';
+
+            // Show loading
+            showLoading();
+
+            // Simulate processing delay
+            setTimeout(() => {
+                const analysis = analyzePrompt(message);
+                const data = generateSampleData(analysis.type, message);
+
+                createChart(data, analysis.chartType, analysis.title);
+                updateStats(analysis.type);
+
+                const responses = [
+                    `Ho creato il grafico "${analysis.title}" basandomi sulla tua richiesta. I dati mostrano interessanti insight!`,
+                    `Grafico generato con successo! Ho analizzato i dati e creato una visualizzazione ottimizzata per "${analysis.title}".`,
+                    `Perfetto! Ho elaborato la tua richiesta e generato "${analysis.title}". Puoi vedere anche le statistiche aggiornate.`,
+                    `Fatto! Il grafico "${analysis.title}" è ora disponibile. I dati sono stati processati e visualizzati.`
+                ];
+
+                addMessage(responses[Math.floor(Math.random() * responses.length)]);
+            }, 1500);
+        }
+
+        function quickPrompt(prompt) {
+            document.getElementById('user-input').value = prompt;
+            sendMessage();
+        }
+
+        function clearChat() {
+            document.getElementById('chat-box').innerHTML = `
+                <div class="bot-message">
+                    Chat ripulita! Scrivi una nuova richiesta per generare grafici analytics.
+                </div>
+            `;
+            chatHistory = [];
+        }
+
+        function exportChart() {
+            if (currentChart) {
+                const link = document.createElement('a');
+                link.download = 'analytics-chart.png';
+                link.href = currentChart.toBase64Image();
+                link.click();
+            } else {
+                addMessage('Nessun grafico disponibile per l\'esportazione. Genera prima un grafico!');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('user-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Analytics Dashboard Initialized');
+        });
+    </script>
+</body>
+
+</html>
