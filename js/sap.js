@@ -249,8 +249,8 @@ function renderSAPData(entity, records, releaseFilter = null) {
     const html = records.map(item => {
         if (entity === "PurchaseOrderSet") {
             // 📦 Template per ordini di acquisto con indicatore stato rilascio più evidente
-            // const releaseStatus = item.IsReleased ? 
-                // `<span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ RILASCIATO</span>` :
+            const releaseStatus = item.IsReleased ? 
+                `<span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ RILASCIATO</span>` : ``;
                 // `<span style="background: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">❌ NON RILASCIATO</span>`;
             
             return `
